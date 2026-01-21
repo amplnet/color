@@ -213,7 +213,7 @@
 
         function adjustTime(amount) {
             manualDelayHours += amount;
-            const direction = manualDelayHours >= 0 ? "Delayed" : "Advanced";
+            const direction = manualDelayHours >= 0 ? "-" : "+";
             document.getElementById('delay-info').textContent = `변화한 시간 : ${direction} ${Math.abs(manualDelayHours)}시간`;
             updateClockAndRotation();
         }

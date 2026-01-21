@@ -3,213 +3,289 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modern 스무고개 게임</title>
+    <title>Modern 스무고개 - 멀티 정답 시스템</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;800&display=swap');
-        body { font-family: 'Pretendard', sans-serif; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
-        .glass-morphism { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
-        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-        .question-card:hover { transform: translateY(-5px); transition: all 0.3s ease; }
+        body { font-family: 'Pretendard', sans-serif; -webkit-user-select: none; user-select: none; overflow: hidden; }
+        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3); }
+        .bg-mesh { background: radial-gradient(at 0% 0%, #a1c4fd 0, transparent 50%), radial-gradient(at 100% 0%, #c2e9fb 0, transparent 50%); background-color: #f0f4f8; }
+        .q-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
+        .q-card:hover { transform: scale(1.02); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="gradient-bg min-h-screen flex items-center justify-center p-4">
+<body class="bg-mesh min-h-screen flex items-center justify-center p-4">
 
-    <div id="game-container" class="max-w-md w-full glass-morphism rounded-3xl shadow-2xl overflow-hidden p-6 space-y-6">
-        <div class="text-center">
-            <h1 class="text-3xl font-800 text-indigo-600 mb-2">🤔 스무고개</h1>
-            <div class="flex justify-between text-sm font-semibold text-gray-500 px-2">
-                <span id="turn-count">질문 기회: 20/20</span>
-                <span id="attempt-count">정답 시도: 5/5</span>
-            </div>
-            <div class="w-full bg-gray-200 h-2 rounded-full mt-2">
-                <div id="progress-bar" class="bg-indigo-500 h-2 rounded-full transition-all duration-500" style="width: 100%"></div>
-            </div>
-        </div>
-
-        <div id="question-area" class="space-y-3">
-            <p class="text-center text-gray-600 font-medium text-sm italic">질문을 하나 선택하세요 (랜덤 3개 노출)</p>
-            <div id="random-questions" class="grid grid-cols-1 gap-3">
+    <div id="app" class="max-w-md w-full glass rounded-[2.5rem] shadow-2xl p-8 space-y-6 relative border border-white">
+        <div class="space-y-4">
+            <div class="flex justify-between items-end">
+                <h1 class="text-4xl font-800 text-slate-800 tracking-tight">스무고개</h1>
+                <div class="text-right">
+                    <p id="turn-txt" class="text-xs font-bold text-blue-500 uppercase tracking-widest">Question 20/20</p>
+                    <p id="attempt-txt" class="text-xs font-bold text-indigo-400 uppercase tracking-widest">Life 5/5</p>
                 </div>
-        </div>
-
-        <div class="bg-gray-50 rounded-2xl p-4 h-48 overflow-y-auto border border-gray-100">
-            <h3 class="text-xs font-bold text-gray-400 uppercase mb-2">진행 기록</h3>
-            <ul id="history-list" class="space-y-2 text-sm"></ul>
-        </div>
-
-        <div class="space-y-3">
-            <div class="relative">
-                <input type="text" id="user-guess" placeholder="정답은 무엇일까요?" 
-                    class="w-full px-4 py-3 rounded-xl border-2 border-indigo-100 focus:border-indigo-500 outline-none transition-all pr-20">
-                <button onclick="submitGuess()" class="absolute right-2 top-2 bottom-2 bg-indigo-600 text-white px-4 rounded-lg font-bold hover:bg-indigo-700 transition-colors">
-                    제출
-                </button>
             </div>
-            <button onclick="showGiveUpModal()" class="w-full text-gray-400 text-sm font-medium hover:text-red-400 transition-colors">
-                답변 포기하기
+            <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden border border-slate-50">
+                <div id="p-bar" class="bg-gradient-to-r from-blue-400 to-indigo-400 h-full w-full transition-all duration-700 ease-out"></div>
+            </div>
+        </div>
+
+        <div id="q-area" class="space-y-3">
+            <div id="q-container" class="grid gap-3"></div>
+        </div>
+
+        <div class="bg-slate-50/50 rounded-[1.5rem] p-5 h-44 overflow-y-auto border border-slate-100/50 scrollbar-hide">
+            <ul id="history" class="space-y-3 text-sm">
+                <li class="text-center text-slate-300 py-10 italic">질문을 선택해 힌트를 얻으세요. </br> 힌트는 총 20개까지 볼 수 있습니다. </br> 정답 입력은 5회까지 가능합니다. </br> </li>
+            </ul>
+        </div>
+
+        <div class="space-y-4">
+            <div class="relative group">
+                <input type="text" id="guess-input" placeholder="정답을 입력하세요..." 
+                    class="w-full px-6 py-4 rounded-2xl border-2 border-transparent bg-white shadow-inner focus:border-blue-300 outline-none transition-all text-slate-700 font-semibold">
+                <button onclick="checkAnswer()" class="absolute right-2 top-2 bottom-2 bg-slate-900 text-white px-5 rounded-xl font-bold hover:bg-blue-600 transition-colors">확인</button>
+            </div>
+            <button id="giveup-btn" onclick="showModal('giveup')" class="w-full text-slate-400 text-xs font-bold uppercase tracking-tighter hover:text-red-400 transition-colors hidden">
+                정답을 모르겠나요? 포기하기
             </button>
         </div>
     </div>
 
-    <div id="modal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center space-y-4">
-            <div id="modal-icon" class="flex justify-center text-6xl"></div>
-            <h2 id="modal-title" class="text-2xl font-bold"></h2>
-            <p id="modal-desc" class="text-gray-600 whitespace-pre-line"></p>
-            <div id="modal-code-area" class="bg-indigo-50 p-3 rounded-xl font-mono text-indigo-700 font-bold hidden"></div>
-            <button onclick="location.reload()" class="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700">
-                다시 시작하기
-            </button>
+    <div id="modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center p-6 z-50">
+        <div class="bg-white rounded-[3rem] p-10 max-w-sm w-full text-center space-y-6 shadow-2xl border border-white animate-in zoom-in-95 duration-300">
+            <div id="m-icon" class="text-7xl"></div>
+            <div class="space-y-2">
+                <h2 id="m-title" class="text-3xl font-800 text-slate-800"></h2>
+                <p id="m-desc" class="text-slate-500 font-medium"></p>
+            </div>
+            <div id="m-code" class="bg-blue-50 text-blue-600 p-4 rounded-2xl font-mono font-800 text-lg hidden border border-blue-100"></div>
+            <button onclick="restartGame()" class="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold shadow-lg">새 게임 시작</button>
         </div>
     </div>
 
     <script>
-        /* --- 보안 및 설정 데이터 --- */
-        const SECRETS = {
-            target: "7IKs6rO8", // '사과' (Base64)
-            success: "U1VDQ0VTU183Nzc=",
-            giveup: "R0lWRVVQXzQwNA=="
-        };
+        let config = {};
+        let turns = 20;
+        let lives = 5;
 
-        // 질문 리스트 업데이트 (구체적 예시 3개 포함 총 100개)
-        const ALL_QUESTIONS = [
-            {
-                id: 'ex1',
-                text: "혹시 빨간색인가요?",
-                answer: (target) => target === "사과" ? "O" : "X"
-            },
-            {
-                id: 'ex2',
-                text: "먹는 것인가요?",
-                answer: (target) => target === "사과" ? "O" : "X"
-            },
-            {
-                id: 'ex3',
-                text: "나무에서 자라나요?",
-                answer: (target) => target === "사과" ? "O" : "X"
-            },
-            ...Array.from({length: 97}, (_, i) => ({
-                id: i,
-                text: `질문 예시 #${i + 4}: 이것은 ${i % 2 === 0 ? '생물' : '무생물'}인가요?`,
-                answer: (target) => "Not Sure"
-            }))
+        const QUESTIONS = [
+            { text: "동물인가요?", ans: "O" },
+            { text: "식물인가요?", ans: "X" },
+            { text: "인물인가요?", ans: "O" },
+            { text: "배경지식 없이 알 수 있나요?", ans: "O" },
+            { text: "제가 지금 속해있나요?", ans: "X" },
+            { text: "국가의 한 종류인가요?", ans: "X" },
+            { text: "구체적인 지명인가요?", ans: "X" },
+            { text: "토끼보다 큰가요?", ans: "O" },
+            { text: "비행기보다 큰가요?", ans: "X" },
+            { text: "건물보다 큰가요?", ans: "X" },
+            { text: "대한민국에 실존하나요?", ans: "X" },
+            { text: "지구에 실존하나요?", ans: "O" },
+            { text: "한 손에 들어오나요?", ans: "X" },
+            { text: "무게가 있나요?", ans: "O" },
+            { text: "한 가지 색깔로만 되어 있나요?", ans: "X" },
+            { text: "집 안에서 볼 수 있나요?", ans: "X" },
+            { text: "인터넷에서 볼 수 있나요?", ans: "O" },
+            { text: "답을 영어 단어로도 쓸 수 있나요?", ans: "O" },
+            { text: "답은 한글인가요?", ans: "X" },
+            { text: "답에 특수 문자가 들어가나요?", ans: "△" },
+            { text: "답은 다섯글자인가요?", ans: "O" },
+            { text: "답에 알파벳이 들어가나요?", ans: "O" },
+            { text: "현재 답을 입력할 수 있나요?", ans: "△" },
+            { text: "답에 알파벳 'e'가 들어가나요?", ans: "O" },
+            { text: "답에 알파벳 'u'가 들어가나요?", ans: "O" },
+            { text: "답에 알파벳 'a'가 들어가나요?", ans: "X" },
+            { text: "답에 알파벳 'i'가 들어가나요?", ans: "X" },
+            { text: "답에 알파벳 'o'가 들어가나요?", ans: "X" },
+            { text: "음식인가요?", ans: "X" },
+            { text: "냄새가 있나요?", ans: "O" },
+            { text: "소리가 나나요?", ans: "O" },
+            { text: "온도가 느껴지나요?", ans: "O" },
+            { text: "수컷 혹은 남자인가요?", ans: "X" },
+            { text: "애니메이션에서만 나오는 인물인가요?", ans: "X" },
+            { text: "게임 속에서만 나오는 인물인가요?", ans: "X" },
+            { text: "게임에서도 등장하나요?", ans: "O" },
+            { text: "실존했던 인물인가요?", ans: "O" },
+            { text: "정치와 관련이 있나요?", ans: "O" },
+            { text: "특별한 호칭으로 부르나요?", ans: "O" },
+            { text: "보드게임에 등장하나요?", ans: "O" },
+            { text: "동화책에 등장하나요?", ans: "O" },
+            { text: "비유적 표현으로도 사용하나요?", ans: "O" },
+            { text: "결혼을 통해 얻을 수 있나요?", ans: "O" },
+            { text: "사람이 만들었나요?", ans: "O" },
+            { text: "움직일 수 있나요?", ans: "O" },
+            { text: "투명한가요?", ans: "X" },
+            { text: "마트에서 살 수 있나요?", ans: "X" },
+            { text: "교과서에 나오나요?", ans: "O" },
+            { text: "현재 1,000개 이상 존재하나요?", ans: "X" },
+            { text: "과거에만 있었던 존재인가요?", ans: "X" },
+            { text: "일반인이 평생 한 번 볼까 말까 할까요?", ans: "O" },
+            { text: "동물들에게도 있나요?", ans: "O" },
+            { text: "과거 한국 땅에 있었던 존재인가요?", ans: "O" },
+            { text: "답을 소재로 한 밴드가 있나요?", ans: "O" },
+            { text: "답을 소재로 한 영화가 있나요?", ans: "O" },
+            { text: "답을 소재로 한 드라마가 있나요?", ans: "O" },
+            { text: "꼬리가 있나요?", ans: "X" },
+            { text: "천사인가요?", ans: "X" },
+            { text: "악마인가요?", ans: "X" },
+            { text: "머리카락이 있나요?", ans: "O" },
+            { text: "날개가 있나요?", ans: "X" },
+            { text: "두 발로 서있나요?", ans: "O" },
+            { text: "게임에서 등장하나요?", ans: "O" },
+            { text: "보드게임에서 등장하나요?", ans: "O" },
+            { text: "암컷 혹은 여자인가요?", ans: "O" },
+            { text: "대상 중 죽은 사람이 있나요?", ans: "O" },
+            { text: "대상 중 살아있는 사람이 있나요?", ans: "O" },
+            { text: "정답이 음악과 관련있나요?", ans: "O" },
+            { text: "대상을 소재로 한 영화가 있나요?", ans: "O" },
+            { text: "대상을 소재로 한 노래가 있나요?", ans: "O" },
+            { text: "정답 중 '?'가 들어가나요?", ans: "△" },
+            { text: "유명한 사람인가요?", ans: "O" },
+            { text: "점프를 할 수 있나요?", ans: "O" },
+            { text: "포유류인가요?", ans: "O" },
+            { text: "바다에 사나요?", ans: "X" },
+            { text: "소파보다 크나요?", ans: "X" },
+            { text: "한글로 해석할 때 세글자 이상인가요?", ans: "X" },
+            { text: "한글로 해석할 때 'ㅇ'이 들어가나요?", ans: "O" },
+            { text: "한글로 해석할 때 서로 다른 자음이 2개 이상 들어가나요?", ans: "X" },
+            { text: "민주주의 국가에서 존재하나요?", ans: "O" },
+            { text: "유명한 보드게임에 등장하나요?", ans: "O" },
+            { text: "유명한 카드게임에 등장하나요?", ans: "O" },
+            { text: "유명한 컴퓨터 게임에 등장하나요?", ans: "O" },
+            { text: "답을 한글로 읽었을 때 한글자인가요?", ans: "O" },
+            { text: "특정 나라에만 있나요?", ans: "O" }, // 쉼표 추가됨
+            { text: "눈으로 볼 수 있나요?", ans: "O" }
         ];
 
-        let turnsLeft = 20;
-        let attemptsLeft = 5;
-        const decodedTarget = decodeURIComponent(escape(atob(SECRETS.target)));
-
-        /* --- 게임 로직 --- */
-        function initGame() {
-            renderQuestions();
-            lucide.createIcons();
+        async function init() {
+            try {
+                const res = await fetch('https://amplnet.github.io/color/config2.json');
+                if(!res.ok) throw new Error();
+                config = await res.json();
+            } catch(e) {
+                config = {
+                    "answer1Hash": ["412748b33c459d1ecb9a1707e336134924e0d6c572d2557f30a8a6b26000df09", "80783afcdcb3fee8720b8e1e6fba36a1cb9557556b96a24b26806504789c23bc"],
+                    "answer2Hash": ["a9c3c1f7674502331a5ad3e54592d3eb2fc39cf78bb908004777ff4ac89119e4", "f9b67545230b5cc7b9d784b5b85885acf9b2681165a3bddbf964a3bc4bac20dd"],
+                    "encryptedSuccess": "Vy1DSEFNUElPTi0yMDI2",
+                    "encryptedGiveup": "Vy1TVVJSRU5ERVItOTk5"
+                };
+            }
+            drawQuestions();
         }
 
-        function renderQuestions() {
-            const container = document.getElementById('random-questions');
+        function restartGame() {
+            turns = 20;
+            lives = 5;
+            document.getElementById('history').innerHTML = '<li class="text-center text-slate-300 py-10 italic">질문을 선택해 힌트를 얻으세요. </br> 힌트는 총 20개까지 볼 수 있습니다. </br> 정답 입력은 5회까지 가능합니다. </br> </li>';
+            document.getElementById('modal').classList.replace('flex', 'hidden');
+            document.getElementById('giveup-btn').classList.add('hidden');
+            document.getElementById('guess-input').value = '';
+            updateUI();
+            drawQuestions();
+        }
+
+        function drawQuestions() {
+            const container = document.getElementById('q-container');
             container.innerHTML = '';
-            
-            const shuffled = [...ALL_QUESTIONS].sort(() => 0.5 - Math.random());
-            const selected = shuffled.slice(0, 3);
-
-            selected.forEach(q => {
-                const btn = document.createElement('button');
-                btn.className = "question-card w-full text-left p-4 bg-white border border-indigo-50 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-300 text-sm font-semibold text-gray-700 flex justify-between items-center";
-                btn.innerHTML = `<span>${q.text}</span> <i data-lucide="chevron-right" class="w-4 h-4 text-indigo-400"></i>`;
-                btn.onclick = () => askQuestion(q);
-                container.appendChild(btn);
-            });
+            if (turns > 0) {
+                const randoms = [...QUESTIONS].sort(() => 0.5 - Math.random()).slice(0, 3);
+                randoms.forEach(q => {
+                    const div = document.createElement('div');
+                    div.className = "q-card bg-white/70 p-4 rounded-[1.2rem] border border-white flex justify-between items-center text-sm font-bold text-slate-600 shadow-sm";
+                    div.innerHTML = `<span>${q.text}</span> <i data-lucide="plus-circle" class="w-4 h-4 text-blue-400"></i>`;
+                    div.onclick = () => useTurn(q);
+                    container.appendChild(div);
+                });
+            } else {
+                container.innerHTML = '<p class="text-center text-slate-400 py-4 font-bold">질문 기회를 모두 소진했습니다.</p>';
+            }
             lucide.createIcons();
         }
 
-        function askQuestion(q) {
-            if (turnsLeft <= 0) return;
-
-            turnsLeft--;
-            const ans = q.answer(decodedTarget);
-            
-            const historyList = document.getElementById('history-list');
+        function useTurn(q) {
+            if(turns <= 0) return;
+            turns--;
+            const hist = document.getElementById('history');
+            if(turns === 19) hist.innerHTML = ''; 
             const li = document.createElement('li');
-            li.className = "flex justify-between items-start bg-white p-2 rounded-lg shadow-sm border-l-4 border-indigo-400";
-            li.innerHTML = `<span class="text-gray-600">Q: ${q.text}</span> <b class="text-indigo-600 ml-2 border-l pl-2">${ans}</b>`;
-            historyList.prepend(li);
-
-            updateStatus();
-            renderQuestions();
+            li.className = "flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border-l-4 border-blue-400 animate-in slide-in-from-right-2";
+            li.innerHTML = `<span class="text-slate-500 font-medium">${q.text}</span> <b class="text-blue-600 font-800">${q.ans}</b>`;
+            hist.prepend(li);
+            updateUI();
+            drawQuestions();
         }
 
-        function updateStatus() {
-            document.getElementById('turn-count').innerText = `질문 기회: ${turnsLeft}/20`;
-            document.getElementById('attempt-count').innerText = `정답 시도: ${attemptsLeft}/5`;
-            document.getElementById('progress-bar').style.width = `${(turnsLeft / 20) * 100}%`;
+        function updateUI() {
+            document.getElementById('turn-txt').innerText = `Question ${turns}/20`;
+            document.getElementById('attempt-txt').innerText = `Life ${lives}/5`;
+            document.getElementById('p-bar').style.width = `${(turns / 20) * 100}%`;
+            if (turns === 0) document.getElementById('giveup-btn').classList.remove('hidden');
         }
 
-        function submitGuess() {
-            const input = document.getElementById('user-guess');
-            const guess = input.value.trim();
+        async function hash(msg) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(msg.toUpperCase());
+            const buffer = await crypto.subtle.digest('SHA-256', data);
+            return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
 
-            if (!guess) return;
-            if (attemptsLeft <= 0) return;
-
-            attemptsLeft--;
-            updateStatus();
-
-            if (guess === decodedTarget) {
-                showModal('success');
-            } else if (attemptsLeft <= 0) {
-                showModal('fail');
-            } else {
-                alert(`틀렸습니다! 남은 기회: ${attemptsLeft}회`);
-                input.value = '';
+        async function checkAnswer() {
+            const input = document.getElementById('guess-input');
+            const val = input.value.trim().toUpperCase();
+            if(!val) return;
+            const userHash = await hash(val);
+            const isAns1 = config.answer1Hash.includes(userHash);
+            const isAns2 = config.answer2Hash.includes(userHash);
+            if(isAns1) showModal('ans1');
+            else if(isAns2) showModal('ans2');
+            else {
+                lives--;
+                updateUI();
+                if(lives <= 0) showModal('fail');
+                else alert("정답이 아닙니다!");
             }
-        }
-
-        function showGiveUpModal() {
-            if(confirm("정말로 포기하시겠습니까?")) {
-                showModal('giveup');
-            }
+            input.value = '';
         }
 
         function showModal(type) {
-            const modal = document.getElementById('modal');
-            const icon = document.getElementById('modal-icon');
-            const title = document.getElementById('modal-title');
-            const desc = document.getElementById('modal-desc');
-            const codeArea = document.getElementById('modal-code-area');
+            const m = document.getElementById('modal');
+            const codeBox = document.getElementById('m-code');
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+            codeBox.classList.add('hidden');
 
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-
-            if (type === 'success') {
-                icon.innerHTML = '🎉';
-                title.innerText = '정답입니다!';
-                desc.innerText = `대단해요! 정답은 [${decodedTarget}]였습니다.\n아래는 당신의 승리 코드입니다.`;
-                codeArea.innerText = atob(SECRETS.success);
-                codeArea.classList.remove('hidden');
-            } else if (type === 'fail') {
-                icon.innerHTML = '😱';
-                title.innerText = '게임 오버';
-                desc.innerText = `정답 시도 횟수를 모두 사용했습니다.\n정답은 [${decodedTarget}]였습니다.`;
-            } else if (type === 'giveup') {
-                icon.innerHTML = '🏳️';
-                title.innerText = '포기하셨군요';
-                desc.innerText = `아쉽네요! 정답은 [${decodedTarget}]였습니다.\n포기 코드를 확인하세요.`;
-                codeArea.innerText = atob(SECRETS.giveup);
-                codeArea.classList.remove('hidden');
+            if(type === 'ans1') {
+                document.getElementById('m-icon').innerText = '💎';
+                document.getElementById('m-title').innerText = '정답입니다!';
+                document.getElementById('m-desc').innerText = '특별 코드를 확인하세요.';
+                codeBox.innerText = atob(config.encryptedSuccess);
+                codeBox.classList.remove('hidden');
+            } else if(type === 'ans2') {
+                document.getElementById('m-icon').innerText = '🌍';
+                document.getElementById('m-title').innerText = '정답입니다!';
+                document.getElementById('m-desc').innerText = '코드를 확인하세요.';
+                codeBox.innerText = atob(config.encryptedGiveup);
+                codeBox.classList.remove('hidden');
+            } else if(type === 'giveup') {
+                document.getElementById('m-icon').innerText = '🏳️';
+                document.getElementById('m-title').innerText = '포기하셨습니다';
+                document.getElementById('m-desc').innerText = '코드를 확인하세요.';
+                codeBox.innerText = atob(config.encryptedGiveup);
+                codeBox.classList.remove('hidden');
+            } else {
+                document.getElementById('m-icon').innerText = '💀';
+                document.getElementById('m-title').innerText = 'GAME OVER';
+                document.getElementById('m-desc').innerText = '기회를 모두 소진했습니다.';
             }
         }
 
-        /* --- 보안: 소스보기 및 우클릭 방지 --- */
         document.addEventListener('contextmenu', e => e.preventDefault());
-        document.onkeydown = function(e) {
-            if (e.keyCode == 123) return false;
-            if (e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) return false;
-            if (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
-        };
+        document.onkeydown = e => { if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && e.keyCode == 73)) return false; };
 
-        initGame();
+        init();
     </script>
 </body>
 </html>

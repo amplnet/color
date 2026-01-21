@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Puzzle - 5x5 Grid</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Space+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #fcfcfd;
+            --accent-color: #3b82f6;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --border-light: #e5e7eb;
+            /* 컬러풀 팔레트 */
+            --cell-red: #ff8787;
+            --cell-blue: #74c0fc;
+            --cell-green: #63e6be;
+            --cell-orange: #ffd43b;
+            --cell-purple: #da77f2;
+            --cell-teal: #66d9e8;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            margin: 0; padding: 20px;
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh;
+        }
+
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { font-size: 2.2rem; letter-spacing: -1px; margin: 0; }
+        .header p { color: var(--text-muted); margin-top: 8px; }
+
+        /* 5x5 그리드 레이아웃 */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(5, 1fr);
+            gap: 12px;
+            width: 90vw;
+            max-width: 500px;
+            aspect-ratio: 1 / 1;
+            perspective: 1000px;
+        }
+
+        .cell {
+            position: relative;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 3px solid white;
+            overflow: hidden;
+        }
+
+        /* 클릭 시 텍스트 스타일 */
+        .cell span {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.3s ease;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .cell.revealed {
+            transform: scale(0.98);
+            box-shadow: inset 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .cell.revealed span {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+/* ✨ 반짝이는 효과 애니메이션 (강조 버전) */
+        @keyframes sparkle {
+            0% { opacity: 0.4; filter: brightness(1) blur(0px); }
+            50% {
+                opacity: 1;
+                /* 밝기를 2배로 높이고, 채도를 올려 색감을 살리며, 블러로 빛 번짐 추가 */
+                filter: brightness(2.0) saturate(1.5) blur(1px);
+            }
+            100% { opacity: 0.4; filter: brightness(1) blur(0px); }
+        }
+
+        .sparkle-effect::after {
+            content: '';
+            position: absolute;
+            /* 셀 테두리 밖으로 살짝 빛이 나가도록 확장 */
+            top: -2px; left: -2px; right: -2px; bottom: -2px;
+            
+            /* 중앙의 흰 빛 범위를 넓히고 더 선명하게 */
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 10%, transparent 60%);
+            
+            /* 애니메이션 속도를 더 빠르게 (1.2s) */
+            animation: sparkle 1.2s infinite ease-in-out;
+            pointer-events: none;
+            
+            border-radius: inherit; /* 셀의 둥근 모서리를 따라감 */
+            
+            /* 셀 외부로 퍼지는 추가적인 빛 발광 효과 */
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.7), inset 0 0 5px rgba(255, 255, 255, 0.4);
+            z-index: 1;
+        }
+
+        .controls { margin-top: 40px; text-align: center; }
+        .reset-btn {
+            background: white; border: 1px solid var(--border-light);
+            padding: 12px 24px; border-radius: 12px;
+            font-weight: 600; color: var(--text-main);
+            cursor: pointer; transition: all 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .reset-btn:hover { background: #f9fafb; border-color: var(--accent-color); }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Twenty Five</h1>
+        <p>Answer Type : English</p>
+    </div>
+
+    <div class="grid-container" id="puzzle-grid">
+        </div>
+
+    <div class="controls">
+        <button class="reset-btn" onclick="resetGrid()">Reset</button>
+    </div>
+
+    <script>
+        // --- [편집 구역] 셀 데이터 설정 ---
+        // text: 클릭 시 나타날 글자
+        // color: 배경색
+        // isSparkling: 반짝임 효과 여부 (이 칸들만 읽으면 답이 됩니다)
+        const gridData = [
+            { text: 'Ⅲ', color: 'var(--cell-red)',    isSparkling: false },
+            { text: 'Ⅲ', color: 'var(--cell-red)',   isSparkling: false },
+            { text: 'Ⅲ', color: 'var(--cell-red)',  isSparkling: false },
+            { text: 'Ⅲ', color: 'var(--cell-red)', isSparkling: false },
+            { text: 'Ⅲ', color: 'var(--cell-red)', isSparkling: true },
+
+            { text: 'Ⅶ', color: 'var(--cell-teal)',   isSparkling: false },
+            { text: 'Ⅶ', color: 'var(--cell-teal)',    isSparkling: false },
+            { text: 'Ⅶ', color: 'var(--cell-teal)',   isSparkling: false },
+            { text: 'Ⅶ', color: 'var(--cell-teal)',  isSparkling: true },
+            { id: 9, text: 'Ⅶ', color: 'var(--cell-teal)', isSparkling: false },
+
+            { text: 'XL', color: 'var(--cell-orange)', isSparkling: false },
+            { text: 'XL', color: 'var(--cell-orange)',   isSparkling: false },
+            { text: 'XL', color: 'var(--cell-orange)',    isSparkling: true },
+            { text: 'XL', color: 'var(--cell-orange)',   isSparkling: false },
+            { text: 'XL', color: 'var(--cell-orange)',  isSparkling: false },
+
+            { text: 'LX', color: 'var(--cell-green)', isSparkling: false },
+            { text: 'LX', color: 'var(--cell-green)', isSparkling: true },
+            { text: 'LX', color: 'var(--cell-green)',   isSparkling: false },
+            { text: 'LX', color: 'var(--cell-green)',    isSparkling: false },
+            { text: 'LX', color: 'var(--cell-green)',   isSparkling: false },
+
+            { text: 'Ⅷ', color: 'var(--cell-purple)',  isSparkling: true },
+            { text: 'Ⅷ', color: 'var(--cell-purple)', isSparkling: false },
+            { text: 'Ⅷ', color: 'var(--cell-purple)', isSparkling: false },
+            { text: 'Ⅷ', color: 'var(--cell-purple)',   isSparkling: false },
+            { text: 'Ⅷ', color: 'var(--cell-purple)',    isSparkling: false }
+        ];
+
+        function initGrid() {
+            const container = document.getElementById('puzzle-grid');
+            gridData.forEach((data, index) => {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                if (data.isSparkling) {
+                    cell.classList.add('sparkle-effect');
+                }
+                cell.style.backgroundColor = data.color;
+                
+                const span = document.createElement('span');
+                span.textContent = data.text;
+                
+                cell.appendChild(span);
+                cell.onclick = () => cell.classList.toggle('revealed');
+                
+                container.appendChild(cell);
+            });
+        }
+
+        function resetGrid() {
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => cell.classList.remove('revealed'));
+        }
+
+        window.onload = initGrid;
+    </script>
+</body>
+</html>

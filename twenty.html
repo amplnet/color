@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern 스무고개 게임</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;800&display=swap');
+        body { font-family: 'Pretendard', sans-serif; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
+        .glass-morphism { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .question-card:hover { transform: translateY(-5px); transition: all 0.3s ease; }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen flex items-center justify-center p-4">
+
+    <div id="game-container" class="max-w-md w-full glass-morphism rounded-3xl shadow-2xl overflow-hidden p-6 space-y-6">
+        <div class="text-center">
+            <h1 class="text-3xl font-800 text-indigo-600 mb-2">🤔 스무고개</h1>
+            <div class="flex justify-between text-sm font-semibold text-gray-500 px-2">
+                <span id="turn-count">질문 기회: 20/20</span>
+                <span id="attempt-count">정답 시도: 5/5</span>
+            </div>
+            <div class="w-full bg-gray-200 h-2 rounded-full mt-2">
+                <div id="progress-bar" class="bg-indigo-500 h-2 rounded-full transition-all duration-500" style="width: 100%"></div>
+            </div>
+        </div>
+
+        <div id="question-area" class="space-y-3">
+            <p class="text-center text-gray-600 font-medium text-sm italic">질문을 하나 선택하세요 (랜덤 3개 노출)</p>
+            <div id="random-questions" class="grid grid-cols-1 gap-3">
+                </div>
+        </div>
+
+        <div class="bg-gray-50 rounded-2xl p-4 h-48 overflow-y-auto border border-gray-100">
+            <h3 class="text-xs font-bold text-gray-400 uppercase mb-2">진행 기록</h3>
+            <ul id="history-list" class="space-y-2 text-sm"></ul>
+        </div>
+
+        <div class="space-y-3">
+            <div class="relative">
+                <input type="text" id="user-guess" placeholder="정답은 무엇일까요?" 
+                    class="w-full px-4 py-3 rounded-xl border-2 border-indigo-100 focus:border-indigo-500 outline-none transition-all pr-20">
+                <button onclick="submitGuess()" class="absolute right-2 top-2 bottom-2 bg-indigo-600 text-white px-4 rounded-lg font-bold hover:bg-indigo-700 transition-colors">
+                    제출
+                </button>
+            </div>
+            <button onclick="showGiveUpModal()" class="w-full text-gray-400 text-sm font-medium hover:text-red-400 transition-colors">
+                답변 포기하기
+            </button>
+        </div>
+    </div>
+
+    <div id="modal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center space-y-4">
+            <div id="modal-icon" class="flex justify-center text-6xl"></div>
+            <h2 id="modal-title" class="text-2xl font-bold"></h2>
+            <p id="modal-desc" class="text-gray-600 whitespace-pre-line"></p>
+            <div id="modal-code-area" class="bg-indigo-50 p-3 rounded-xl font-mono text-indigo-700 font-bold hidden"></div>
+            <button onclick="location.reload()" class="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700">
+                다시 시작하기
+            </button>
+        </div>
+    </div>
+
+    <script>
+        /* --- 보안 및 설정 데이터 --- */
+        const SECRETS = {
+            target: "7IKs6rO8", // '사과' (Base64)
+            success: "U1VDQ0VTU183Nzc=",
+            giveup: "R0lWRVVQXzQwNA=="
+        };
+
+        // 질문 리스트 업데이트 (구체적 예시 3개 포함 총 100개)
+        const ALL_QUESTIONS = [
+            {
+                id: 'ex1',
+                text: "혹시 빨간색인가요?",
+                answer: (target) => target === "사과" ? "O" : "X"
+            },
+            {
+                id: 'ex2',
+                text: "먹는 것인가요?",
+                answer: (target) => target === "사과" ? "O" : "X"
+            },
+            {
+                id: 'ex3',
+                text: "나무에서 자라나요?",
+                answer: (target) => target === "사과" ? "O" : "X"
+            },
+            ...Array.from({length: 97}, (_, i) => ({
+                id: i,
+                text: `질문 예시 #${i + 4}: 이것은 ${i % 2 === 0 ? '생물' : '무생물'}인가요?`,
+                answer: (target) => "Not Sure"
+            }))
+        ];
+
+        let turnsLeft = 20;
+        let attemptsLeft = 5;
+        const decodedTarget = decodeURIComponent(escape(atob(SECRETS.target)));
+
+        /* --- 게임 로직 --- */
+        function initGame() {
+            renderQuestions();
+            lucide.createIcons();
+        }
+
+        function renderQuestions() {
+            const container = document.getElementById('random-questions');
+            container.innerHTML = '';
+            
+            const shuffled = [...ALL_QUESTIONS].sort(() => 0.5 - Math.random());
+            const selected = shuffled.slice(0, 3);
+
+            selected.forEach(q => {
+                const btn = document.createElement('button');
+                btn.className = "question-card w-full text-left p-4 bg-white border border-indigo-50 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-300 text-sm font-semibold text-gray-700 flex justify-between items-center";
+                btn.innerHTML = `<span>${q.text}</span> <i data-lucide="chevron-right" class="w-4 h-4 text-indigo-400"></i>`;
+                btn.onclick = () => askQuestion(q);
+                container.appendChild(btn);
+            });
+            lucide.createIcons();
+        }
+
+        function askQuestion(q) {
+            if (turnsLeft <= 0) return;
+
+            turnsLeft--;
+            const ans = q.answer(decodedTarget);
+            
+            const historyList = document.getElementById('history-list');
+            const li = document.createElement('li');
+            li.className = "flex justify-between items-start bg-white p-2 rounded-lg shadow-sm border-l-4 border-indigo-400";
+            li.innerHTML = `<span class="text-gray-600">Q: ${q.text}</span> <b class="text-indigo-600 ml-2 border-l pl-2">${ans}</b>`;
+            historyList.prepend(li);
+
+            updateStatus();
+            renderQuestions();
+        }
+
+        function updateStatus() {
+            document.getElementById('turn-count').innerText = `질문 기회: ${turnsLeft}/20`;
+            document.getElementById('attempt-count').innerText = `정답 시도: ${attemptsLeft}/5`;
+            document.getElementById('progress-bar').style.width = `${(turnsLeft / 20) * 100}%`;
+        }
+
+        function submitGuess() {
+            const input = document.getElementById('user-guess');
+            const guess = input.value.trim();
+
+            if (!guess) return;
+            if (attemptsLeft <= 0) return;
+
+            attemptsLeft--;
+            updateStatus();
+
+            if (guess === decodedTarget) {
+                showModal('success');
+            } else if (attemptsLeft <= 0) {
+                showModal('fail');
+            } else {
+                alert(`틀렸습니다! 남은 기회: ${attemptsLeft}회`);
+                input.value = '';
+            }
+        }
+
+        function showGiveUpModal() {
+            if(confirm("정말로 포기하시겠습니까?")) {
+                showModal('giveup');
+            }
+        }
+
+        function showModal(type) {
+            const modal = document.getElementById('modal');
+            const icon = document.getElementById('modal-icon');
+            const title = document.getElementById('modal-title');
+            const desc = document.getElementById('modal-desc');
+            const codeArea = document.getElementById('modal-code-area');
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            if (type === 'success') {
+                icon.innerHTML = '🎉';
+                title.innerText = '정답입니다!';
+                desc.innerText = `대단해요! 정답은 [${decodedTarget}]였습니다.\n아래는 당신의 승리 코드입니다.`;
+                codeArea.innerText = atob(SECRETS.success);
+                codeArea.classList.remove('hidden');
+            } else if (type === 'fail') {
+                icon.innerHTML = '😱';
+                title.innerText = '게임 오버';
+                desc.innerText = `정답 시도 횟수를 모두 사용했습니다.\n정답은 [${decodedTarget}]였습니다.`;
+            } else if (type === 'giveup') {
+                icon.innerHTML = '🏳️';
+                title.innerText = '포기하셨군요';
+                desc.innerText = `아쉽네요! 정답은 [${decodedTarget}]였습니다.\n포기 코드를 확인하세요.`;
+                codeArea.innerText = atob(SECRETS.giveup);
+                codeArea.classList.remove('hidden');
+            }
+        }
+
+        /* --- 보안: 소스보기 및 우클릭 방지 --- */
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.onkeydown = function(e) {
+            if (e.keyCode == 123) return false;
+            if (e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) return false;
+            if (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
+        };
+
+        initGame();
+    </script>
+</body>
+</html>

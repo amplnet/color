@@ -1,12 +1,6 @@
 {
-  "answer1Hash": [
-    "98bffc152dd8c31694cd7329106118d7c918c2847cb6ed541d97171117993b5e", 
-    "9d4402d72c957d68d9819813edff28afa873707752266950a4e5e13de1039389"
-  ],
-  "answer2Hash": [
-    "d7b0bbea3a935222c4198c38e30b2eb3e111d11dea87fa53547eac1c8a4ff03b", 
-    "486ea46224d1bb4fb680f34f7c9ad96a8f24ec88be73ea8e5a6c65260e9cb8a7"
-  ],
-  "encryptedSuccess": "Vy1DSEFNUElPTi0yMDI2",
-  "encryptedGiveup": "Vy1TVVJSRU5ERVItOTk5"
-}
+                    "answer1Hash": ["412748b33c459d1ecb9a1707e336134924e0d6c572d2557f30a8a6b26000df09", "80783afcdcb3fee8720b8e1e6fba36a1cb9557556b96a24b26806504789c23bc"],
+                    "answer2Hash": ["a9c3c1f7674502331a5ad3e54592d3eb2fc39cf78bb908004777ff4ac89119e4", "f9b67545230b5cc7b9d784b5b85885acf9b2681165a3bddbf964a3bc4bac20dd"],
+                    "encryptedSuccess": "Vy1DSEFNUElPTi0yMDI2",
+                    "encryptedGiveup": "Vy1TVVJSRU5ERVItOTk5"
+                };

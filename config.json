@@ -1,6 +1,12 @@
 {
-  "answer1Hash": "72f32a76295333f063e5e4854593ed3013a26a45f8f3b8902d1316b606a2f30b",
-  "answer2Hash": "b8408f6153066113197b1a647900b8098c760824b20a32248512133a85499256",
+  "answer1Hash": [
+    "98bffc152dd8c31694cd7329106118d7c918c2847cb6ed541d97171117993b5e", 
+    "9d4402d72c957d68d9819813edff28afa873707752266950a4e5e13de1039389"
+  ],
+  "answer2Hash": [
+    "d7b0bbea3a935222c4198c38e30b2eb3e111d11dea87fa53547eac1c8a4ff03b", 
+    "486ea46224d1bb4fb680f34f7c9ad96a8f24ec88be73ea8e5a6c65260e9cb8a7"
+  ],
   "encryptedSuccess": "Vy1DSEFNUElPTi0yMDI2",
   "encryptedGiveup": "Vy1TVVJSRU5ERVItOTk5"
 }

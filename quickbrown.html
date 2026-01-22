@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jumping Fox Interactive - Notice Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800&family=Noto+Sans+KR:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f0f9ff;
+            --accent-color: #ff6b6b;
+            --underline-color: #ffd32a;
+            --grass-color: #7bed9f;
+            --text-color: #2f3542;
+            --notice-bg: #fff9e6;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; overflow-y: auto; padding: 20px 0;
+        }
+
+        .state-radio { display: none; }
+
+        .content-card {
+            width: 95%; max-width: 700px;
+            background: white; padding: 30px; border-radius: 25px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.05); text-align: center;
+        }
+
+        /* --- [추가] 공지사항 영역 --- */
+        .announcement-area {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: var(--notice-bg);
+            border-radius: 15px;
+            min-height: 50px;
+            border: 2px dashed #ffeaa7;
+            text-align: left;
+        }
+        .notice-line {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #d35400;
+            font-weight: 700;
+            display: none; /* 기본 숨김 */
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* 문장 표시 영역 */
+        .sentence-area {
+            font-family: 'Montserrat', sans-serif; font-size: 1.2rem;
+            margin-bottom: 30px; display: flex; justify-content: center;
+            flex-wrap: wrap; gap: 12px; font-weight: 800;
+        }
+        .type-prefix { color: var(--accent-color); margin-right: 5px; }
+
+        .word-slot {
+            position: relative; display: inline-block;
+            min-width: 45px; padding-bottom: 5px;
+            border-bottom: 3px solid var(--underline-color);
+        }
+        .word {
+            opacity: 0; transform: translateY(10px);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            color: var(--text-color); display: block;
+        }
+
+        /* 애니메이션 무대 */
+        .scene {
+            position: relative; width: 100%; height: 280px;
+            background: linear-gradient(to bottom, #e3f2fd 0%, #ffffff 100%);
+            border-radius: 20px; overflow: hidden;
+            border-bottom: 12px solid var(--grass-color);
+        }
+
+        .actor { position: absolute; pointer-events: none; }
+        .actor img { width: 100%; height: auto; }
+
+        .dog { bottom: 20px; left: 40%; transform: translateX(-50%); width: 100px; z-index: 5; }
+        .dog::after { content: "Zzz..."; position: absolute; top: -25px; right: 0; font-size: 1rem; color: #ced4da; animation: blink 2s infinite; }
+
+        .fox-container { bottom: 25px; left: 10%; width: 85px; opacity: 0; z-index: 10; }
+        .fox-click-label { position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: pointer; z-index: 20; display: none; }
+
+        /* --- 로직 : 공지사항 및 단어 누적 표시 --- */
+        #s1:checked ~ .content-card .n1, #s1:checked ~ .content-card .w1,
+        #s2:checked ~ .content-card .n1, #s2:checked ~ .content-card .n2, #s2:checked ~ .content-card .w1, #s2:checked ~ .content-card .w2,
+        #s3:checked ~ .content-card .n1, #s3:checked ~ .content-card .n2, #s3:checked ~ .content-card .n3, #s3:checked ~ .content-card .w1, #s3:checked ~ .content-card .w2, #s3:checked ~ .content-card .w3,
+        #s4:checked ~ .content-card .n1, #s4:checked ~ .content-card .n2, #s4:checked ~ .content-card .n3, #s4:checked ~ .content-card .n4, #s4:checked ~ .content-card .w1, #s4:checked ~ .content-card .w2, #s4:checked ~ .content-card .w3, #s4:checked ~ .content-card .w4,
+        #s5:checked ~ .content-card .n1, #s5:checked ~ .content-card .n2, #s5:checked ~ .content-card .n3, #s5:checked ~ .content-card .n4, #s5:checked ~ .content-card .n5, #s5:checked ~ .content-card .w1, #s5:checked ~ .content-card .w2, #s5:checked ~ .content-card .w3, #s5:checked ~ .content-card .w4, #s5:checked ~ .content-card .w5,
+        #s6:checked ~ .content-card .n1, #s6:checked ~ .content-card .n2, #s6:checked ~ .content-card .n3, #s6:checked ~ .content-card .n4, #s6:checked ~ .content-card .n5, #s6:checked ~ .content-card .n6, #s6:checked ~ .content-card .w1, #s6:checked ~ .content-card .w2, #s6:checked ~ .content-card .w3, #s6:checked ~ .content-card .w4, #s6:checked ~ .content-card .w5, #s6:checked ~ .content-card .w6,
+        #s7:checked ~ .content-card .n1, #s7:checked ~ .content-card .n2, #s7:checked ~ .content-card .n3, #s7:checked ~ .content-card .n4, #s7:checked ~ .content-card .n5, #s7:checked ~ .content-card .n6, #s7:checked ~ .content-card .n7, #s7:checked ~ .content-card .w1, #s7:checked ~ .content-card .w2, #s7:checked ~ .content-card .w3, #s7:checked ~ .content-card .w4, #s7:checked ~ .content-card .w5, #s7:checked ~ .content-card .w6, #s7:checked ~ .content-card .w7,
+        #s8:checked ~ .content-card .n1, #s8:checked ~ .content-card .n2, #s8:checked ~ .content-card .n3, #s8:checked ~ .content-card .n4, #s8:checked ~ .content-card .n5, #s8:checked ~ .content-card .n6, #s8:checked ~ .content-card .n7, #s8:checked ~ .content-card .n8, #s8:checked ~ .content-card .w1, #s8:checked ~ .content-card .w2, #s8:checked ~ .content-card .w3, #s8:checked ~ .content-card .w4, #s8:checked ~ .content-card .w5, #s8:checked ~ .content-card .w6, #s8:checked ~ .content-card .w7, #s8:checked ~ .content-card .w8,
+        #s9:checked ~ .content-card .notice-line, #s9:checked ~ .content-card .word { display: block; opacity: 1; transform: translateY(0); }
+
+        /* 특정 단계에서 라인 보이기 */
+        #s1:checked ~ .content-card .n1, #s2:checked ~ .content-card .n2, #s3:checked ~ .content-card .n3, 
+        #s4:checked ~ .content-card .n4, #s5:checked ~ .content-card .n5, #s6:checked ~ .content-card .n6, 
+        #s7:checked ~ .content-card .n7, #s8:checked ~ .content-card .n8, #s9:checked ~ .content-card .n9 { display: block; }
+
+        /* --- 여우 점프 로직 --- */
+        #s0:checked ~ .content-card .fox-1 { opacity: 1; pointer-events: auto; }
+        #s0:checked ~ .content-card .fox-1 .fox-click-label { display: block; }
+        #s1:checked ~ .content-card .fox-1 { animation: jump-arc 0.8s forwards; opacity: 1; }
+        #s1:checked ~ .content-card .fox-2 { opacity: 1; pointer-events: auto; transition-delay: 0.8s; }
+        #s1:checked ~ .content-card .fox-2 .fox-click-label { display: block; }
+        #s2:checked ~ .content-card .fox-2 { animation: jump-arc 0.8s forwards; opacity: 1; }
+        #s2:checked ~ .content-card .fox-3 { opacity: 1; pointer-events: auto; transition-delay: 0.8s; }
+        #s2:checked ~ .content-card .fox-3 .fox-click-label { display: block; }
+        #s3:checked ~ .content-card .fox-3 { animation: jump-arc 0.8s forwards; opacity: 1; }
+        #s3:checked ~ .content-card .fox-4 { opacity: 1; pointer-events: auto; transition-delay: 0.8s; }
+        #s3:checked ~ .content-card .fox-4 .fox-click-label { display: block; }
+        #s4:checked ~ .content-card .fox-4 { animation: jump-arc 0.8s forwards; opacity: 1; }
+        #s4:checked ~ .content-card .fox-5 { opacity: 1; pointer-events: auto; transition-delay: 0.8s; }
+        #s4:checked ~ .content-card .fox-5 .fox-click-label { display: block; }
+        #s5:checked ~ .content-card .fox-5 { animation: jump-arc 0.8s forwards; opacity: 1; }
+        #s5:checked ~ .content-card .fox-6 { opacity: 1; pointer-events: auto; transition-delay: 0.8s; }
+        #s5:checked ~ .content-card .fox-6 .fox-click-label { display: block; }
+        #s6:checked ~ .content-card .fox-6 { animation: jump-arc 0.8s forwards; opacity: 1; }
+        #s6:checked ~ .content-card .fox-7 { opacity: 1; pointer-events: auto; transition-delay: 0.8s; }
+        #s6:checked ~ .content-card .fox-7 .fox-click-label { display: block; }
+        #s7:checked ~ .content-card .fox-7 { animation: jump-arc 0.8s forwards; opacity: 1; }
+        #s7:checked ~ .content-card .fox-8 { opacity: 1; pointer-events: auto; transition-delay: 0.8s; }
+        #s7:checked ~ .content-card .fox-8 .fox-click-label { display: block; }
+        #s8:checked ~ .content-card .fox-8 { animation: jump-arc 0.8s forwards; opacity: 1; }
+        #s8:checked ~ .content-card .fox-9 { opacity: 1; pointer-events: auto; transition-delay: 0.8s; }
+        #s8:checked ~ .content-card .fox-9 .fox-click-label { display: block; }
+        #s9:checked ~ .content-card .fox-9 { animation: jump-arc 0.8s forwards; opacity: 1; }
+
+        @keyframes jump-arc {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            45% { transform: translate(180px, -150px) rotate(20deg); }
+            85% { transform: translate(360px, 0) rotate(0deg); opacity: 1; }
+            100% { transform: translate(400px, 20px); opacity: 0; }
+        }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    </style>
+</head>
+<body>
+
+    <input type="radio" name="step" id="s0" class="state-radio" checked>
+    <input type="radio" name="step" id="s1" class="state-radio">
+    <input type="radio" name="step" id="s2" class="state-radio">
+    <input type="radio" name="step" id="s3" class="state-radio">
+    <input type="radio" name="step" id="s4" class="state-radio">
+    <input type="radio" name="step" id="s5" class="state-radio">
+    <input type="radio" name="step" id="s6" class="state-radio">
+    <input type="radio" name="step" id="s7" class="state-radio">
+    <input type="radio" name="step" id="s8" class="state-radio">
+    <input type="radio" name="step" id="s9" class="state-radio">
+
+    <div class="content-card">
+        <div class="announcement-area">
+            <div class="notice-line n1">안녕하세요. 만나서 반갑습니다.</div>
+            <div class="notice-line n2">이번 미궁은 쉽고 간단한</div>
+            <div class="notice-line n3">공지 3: 잠든 개는 여전히 꿈을 꾸고 있습니다.</div>
+            <div class="notice-line n4">공지 4: 숲속의 비밀이 하나씩 풀립니다.</div>
+            <div class="notice-line n5:">공지 5: 여우의 도약이 정말 우아합니다.</div>
+            <div class="notice-line n6">공지 6: 문장의 절반 이상이 완성되었습니다.</div>
+            <div class="notice-line n7">공지 7: 거의 다 왔어요, 조금만 더!</div>
+            <div class="notice-line n8">공지 8: 마지막 관문이 눈앞에 보입니다.</div>
+            <div class="notice-line n9">이제 스물 여섯 개의 다양한 문제를 만나보세요!</div>
+        </div>
+
+        <div class="sentence-area">
+            <span class="type-prefix">TYPE:</span>
+            <span class="word-slot"><span class="word w1">The</span></span>
+            <span class="word-slot"><span class="word w2">quick</span></span>
+            <span class="word-slot"><span class="word w3">brown</span></span>
+            <span class="word-slot"><span class="word w4">fox</span></span>
+            <span class="word-slot"><span class="word w5">jumps</span></span>
+            <span class="word-slot"><span class="word w6">over</span></span>
+            <span class="word-slot"><span class="word w7">the</span></span>
+            <span class="word-slot"><span class="word w8">lazy</span></span>
+            <span class="word-slot"><span class="word w9">dog</span></span>
+        </div>
+
+        <div class="scene">
+            <div class="actor dog"><img src="https://amplnet.github.io/color/dogg.png" alt="Dog"></div>
+
+            <div class="actor fox-container fox-1"><label for="s1" class="fox-click-label"></label><img src="https://amplnet.github.io/color/foxx.png" alt="Fox"></div>
+            <div class="actor fox-container fox-2"><label for="s2" class="fox-click-label"></label><img src="https://amplnet.github.io/color/foxx.png" alt="Fox"></div>
+            <div class="actor fox-container fox-3"><label for="s3" class="fox-click-label"></label><img src="https://amplnet.github.io/color/foxx.png" alt="Fox"></div>
+            <div class="actor fox-container fox-4"><label for="s4" class="fox-click-label"></label><img src="https://amplnet.github.io/color/foxx.png" alt="Fox"></div>
+            <div class="actor fox-container fox-5"><label for="s5" class="fox-click-label"></label><img src="https://amplnet.github.io/color/foxx.png" alt="Fox"></div>
+            <div class="actor fox-container fox-6"><label for="s6" class="fox-click-label"></label><img src="https://amplnet.github.io/color/foxx.png" alt="Fox"></div>
+            <div class="actor fox-container fox-7"><label for="s7" class="fox-click-label"></label><img src="https://amplnet.github.io/color/foxx.png" alt="Fox"></div>
+            <div class="actor fox-container fox-8"><label for="s8" class="fox-click-label"></label><img src="https://amplnet.github.io/color/foxx.png" alt="Fox"></div>
+            <div class="actor fox-container fox-9"><label for="s9" class="fox-click-label"></label><img src="https://amplnet.github.io/color/foxx.png" alt="Fox"></div>
+        </div>
+    </div>
+
+</body>
+</html>

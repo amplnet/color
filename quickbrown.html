@@ -3,99 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jumping Fox Interactive - Notice Edition</title>
+    <title>Jumping Fox Interactive - Beautiful Background</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #f0f9ff;
-            --accent-color: #ff6b6b;
-            --underline-color: #ffd32a;
-            --grass-color: #7bed9f;
-            --text-color: #2f3542;
-            --notice-bg: #fffbf0; /* 조금 더 부드러운 노란색 */
+            --bg-color: #f0f9ff; --accent-color: #ff6b6b; --underline-color: #ffd32a;
+            --text-color: #2f3542; --notice-bg: #fffbf0;
+            
+            /* ================= 새로운 파스텔 배경 팔레트 ================= */
+            --sky-top: #ffe2d1;       /* 따뜻한 살구색 하늘 */
+            --sky-bottom: #dbe7fc;    /* 부드러운 파란색 하늘 */
+            --sun-glow: #fff5c4;      /* 햇살 */
+            --cloud-white: #ffffff90; /* 반투명 구름 */
+            --mtn-far: #c5cae9;       /* 원경 산 (연보라) */
+            --mtn-near: #b0bec5;      /* 근경 산 (청회색) */
+            --forest-back: #a5d6a7;   /* 뒤쪽 숲 (연초록) */
+            --forest-front: #81c784;  /* 앞쪽 숲 (진초록) */
+            --hill-color: #dcedc8;    /* 언덕 (라임) */
+            --flower-1: #ffcdd2;      /* 꽃 1 (분홍) */
+            --flower-2: #fff9c4;      /* 꽃 2 (노랑) */
+            /* ========================================================= */
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Noto Sans KR', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            display: flex; justify-content: center; align-items: center;
-            min-height: 100vh; overflow-y: auto; padding: 20px 0;
+            font-family: 'Noto Sans KR', sans-serif; background-color: var(--bg-color); color: var(--text-color);
+            display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow-y: auto; padding: 20px 0;
         }
 
         .state-radio { display: none; }
-
         .content-card {
-            width: 95%; max-width: 700px;
-            background: white; padding: 30px; border-radius: 25px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.05); text-align: center;
+            width: 95%; max-width: 700px; background: white; padding: 30px; border-radius: 25px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.05); text-align: center; position: relative;
         }
 
-        /* --- 공지사항 영역 UI 개선 --- */
+        /* 공지사항 영역 UI */
         .announcement-area {
-            margin-bottom: 25px;
-            padding: 20px;
-            background: var(--notice-bg);
-            border-radius: 18px;
-            min-height: 60px;
-            border: 1px solid #ffeaa7; /* 점선에서 실선으로 변경하여 모던함 강조 */
-            text-align: left;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+            margin-bottom: 25px; padding: 20px; background: var(--notice-bg);
+            border-radius: 18px; min-height: 60px; border: 1px solid #ffeaa7;
+            text-align: left; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
         }
         .notice-line {
-            /* 모던한 폰트 스타일 적용 */
-            font-family: 'Montserrat', 'Noto Sans KR', sans-serif;
-            font-size: 0.95rem;
-            line-height: 1.8;
-            color: #e67e22;
-            font-weight: 500;
-            letter-spacing: -0.02em;
-            display: none; 
-            animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-family: 'Montserrat', 'Noto Sans KR', sans-serif; font-size: 0.95rem; line-height: 1.8; color: #e67e22;
+            font-weight: 500; letter-spacing: -0.02em; display: none; animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
         /* 문장 표시 영역 */
         .sentence-area {
-            font-family: 'Montserrat', sans-serif; font-size: 1.2rem;
-            margin-bottom: 30px; display: flex; justify-content: center;
-            flex-wrap: wrap; gap: 12px; font-weight: 800;
+            font-family: 'Montserrat', sans-serif; font-size: 1.2rem; margin-bottom: 30px;
+            display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; font-weight: 800;
         }
         .type-prefix { color: var(--accent-color); margin-right: 5px; }
+        .word-slot { position: relative; display: inline-block; min-width: 45px; padding-bottom: 5px; border-bottom: 3px solid var(--underline-color); }
+        .word { opacity: 0; transform: translateY(10px); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); color: var(--text-color); display: block; }
 
-        .word-slot {
-            position: relative; display: inline-block;
-            min-width: 45px; padding-bottom: 5px;
-            border-bottom: 3px solid var(--underline-color);
-        }
-        .word {
-            opacity: 0; transform: translateY(10px);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            color: var(--text-color); display: block;
-        }
-
-        /* 애니메이션 무대 */
+        /* =========================================
+           [수정됨] 풍성한 파스텔 일러스트 배경
+        ========================================= */
         .scene {
-            position: relative; width: 100%; height: 280px;
-            background: linear-gradient(to bottom, #e3f2fd 0%, #ffffff 100%);
+            position: relative; width: 100%; height: 320px; /* 높이 약간 더 확보 */
             border-radius: 20px; overflow: hidden;
-            border-bottom: 12px solid var(--grass-color);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.05);
         }
 
-        .actor { position: absolute; pointer-events: none; }
-        .actor img { width: 100%; height: auto; }
+        /* 배경 레이어 공통 */
+        .bg-layer { position: absolute; width: 100%; left: 0; pointer-events: none; }
 
-        .dog { bottom: 20px; left: 40%; transform: translateX(-50%); width: 100px; z-index: 5; }
-        .dog::after { content: "Zzz..."; position: absolute; top: -25px; right: 0; font-size: 1rem; color: #ced4da; animation: blink 2s infinite; }
+        /* 1. 하늘 (그라데이션 + 햇살) */
+        .bg-sky {
+            height: 100%; top: 0;
+            background: linear-gradient(to bottom, var(--sky-top), var(--sky-bottom));
+            z-index: 0;
+        }
+        .sky-glow {
+            position: absolute; top: -50%; left: -20%; width: 60%; padding-bottom: 60%;
+            background: radial-gradient(circle, var(--sun-glow) 20%, transparent 70%);
+            opacity: 0.6; mix-blend-mode: overlay;
+        }
 
-        .fox-container { bottom: 25px; left: 10%; width: 85px; opacity: 0; z-index: 10; }
+        /* 2. 구름 (더 자연스러운 형태) */
+        .bg-clouds {
+            height: 100%; top: 0; z-index: 1;
+            background-image: 
+                radial-gradient(circle at 20% 30%, var(--cloud-white) 40px, transparent 41px),
+                radial-gradient(circle at 25% 35%, var(--cloud-white) 30px, transparent 31px),
+                radial-gradient(circle at 15% 35%, var(--cloud-white) 35px, transparent 36px),
+                radial-gradient(circle at 70% 20%, var(--cloud-white) 50px, transparent 51px),
+                radial-gradient(circle at 75% 25%, var(--cloud-white) 40px, transparent 41px),
+                radial-gradient(circle at 65% 25%, var(--cloud-white) 45px, transparent 46px);
+            background-size: 150% 100%;
+            animation: cloudMove 60s linear infinite;
+            opacity: 0.8;
+        }
+        @keyframes cloudMove { from { background-position: 0 0; } to { background-position: 100% 0; } }
+
+        /* 3. 산맥 (원경 & 근경) */
+        .bg-mountains {
+            height: 50%; bottom: 30%; z-index: 2;
+        }
+        .mtn-far {
+            position: absolute; bottom: 20%; left: 0; width: 120%; height: 100%;
+            background: var(--mtn-far);
+            clip-path: polygon(0 100%, 20% 40%, 40% 70%, 60% 30%, 80% 60%, 100% 20%, 120% 100%);
+        }
+        .mtn-near {
+            position: absolute; bottom: 0; left: -10%; width: 130%; height: 80%;
+            background: var(--mtn-near);
+            clip-path: polygon(0 100%, 15% 30%, 35% 60%, 55% 20%, 75% 50%, 95% 10%, 100% 100%);
+        }
+
+        /* 4. 숲 (둥글둥글한 형태) */
+        .bg-forest {
+            height: 40%; bottom: 15%; z-index: 3;
+        }
+        .forest-back {
+            position: absolute; bottom: 10%; left: -5%; width: 110%; height: 100%;
+            background: var(--forest-back);
+            border-radius: 50% 50% 0 0 / 30% 30% 0 0;
+        }
+        .forest-front {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 80%;
+            background: var(--forest-front);
+            border-radius: 60% 40% 0 0 / 40% 30% 0 0;
+        }
+
+        /* 5. 언덕과 꽃 (가장 앞) */
+        .bg-hill-front {
+            height: 25%; bottom: 0; z-index: 4;
+            background: var(--hill-color);
+            border-radius: 100% 80% 0 0 / 80% 60% 0 0;
+            box-shadow: inset 0 5px 15px rgba(255,255,255,0.3);
+        }
+        /* 꽃 장식 (CSS 그라데이션 점) */
+        .flowers {
+            position: absolute; width: 100%; height: 100%;
+            background-image: 
+                radial-gradient(circle, var(--flower-1) 3px, transparent 4px),
+                radial-gradient(circle, var(--flower-2) 2px, transparent 3px);
+            background-size: 40px 30px, 55px 45px;
+            background-position: 0 0, 25px 15px;
+            opacity: 0.7;
+        }
+
+        /* --- 캐릭터 (z-index 조정) --- */
+        .actor { position: absolute; pointer-events: none; z-index: 10; } /* 배경보다 앞에 */
+        .actor img { width: 100%; height: auto; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.1)); }
+
+        .dog { bottom: 15px; left: 40%; transform: translateX(-50%); width: 100px; }
+        .dog::after { content: "Zzz..."; position: absolute; top: -25px; right: 0; font-size: 1rem; color: #fefefe; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); animation: blink 2s infinite; }
+
+        .fox-container { bottom: 20px; left: 10%; width: 90px; opacity: 0; z-index: 11; }
         .fox-click-label { position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: pointer; z-index: 20; display: none; }
 
-        /* --- 로직 : 공지사항 및 단어 누적 표시 --- */
+        /* 로직 및 애니메이션 (변경 없음) */
         #s1:checked ~ .content-card .n1, #s1:checked ~ .content-card .w1,
         #s2:checked ~ .content-card .n1, #s2:checked ~ .content-card .n2, #s2:checked ~ .content-card .w1, #s2:checked ~ .content-card .w2,
         #s3:checked ~ .content-card .n1, #s3:checked ~ .content-card .n2, #s3:checked ~ .content-card .n3, #s3:checked ~ .content-card .w1, #s3:checked ~ .content-card .w2, #s3:checked ~ .content-card .w3,
@@ -189,8 +250,13 @@
         </div>
 
         <div class="scene">
-            <div class="actor dog"><img src="https://amplnet.github.io/color/dogg.png" alt="Dog"></div>
+            <div class="bg-layer bg-sky"><div class="sky-glow"></div></div>
+            <div class="bg-layer bg-clouds"></div>
+            <div class="bg-layer bg-mountains"><div class="mtn-far"></div><div class="mtn-near"></div></div>
+            <div class="bg-layer bg-forest"><div class="forest-back"></div><div class="forest-front"></div></div>
+            <div class="bg-layer bg-hill-front"><div class="flowers"></div></div>
 
+            <div class="actor dog"><img src="https://amplnet.github.io/color/dogg.png" alt="Dog"></div>
             <div class="actor fox-container fox-1"><label for="s1" class="fox-click-label"></label><img src="https://amplnet.github.io/color/foxx.png" alt="Fox"></div>
             <div class="actor fox-container fox-2"><label for="s2" class="fox-click-label"></label><img src="https://amplnet.github.io/color/foxx.png" alt="Fox"></div>
             <div class="actor fox-container fox-3"><label for="s3" class="fox-click-label"></label><img src="https://amplnet.github.io/color/foxx.png" alt="Fox"></div>

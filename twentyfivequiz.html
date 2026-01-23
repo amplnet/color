@@ -9,9 +9,9 @@
             --bg-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
             --card-bg: #ffffff;
             --text-color: #505050;
-            --accent-color: #ff6b6b; /* 상큼한 핑크/레드 */
+            --accent-color: #ff6b6b; 
             --cell-off: #f0f2f5;
-            --cell-on: #ffd700; /* 밝은 개나리색 */
+            --cell-on: #ffd700; 
             --switch-gradient: linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);
         }
 
@@ -44,10 +44,9 @@
             font-size: 2.2rem;
             color: var(--accent-color);
             margin-bottom: 10px;
-            text-shadow: 2px 2px 0px rgba(0,0,0,0.05);
         }
 
-        .header p { font-size: 1rem; color: #888; margin-bottom: 25px; }
+        .header p { font-size: 0.95rem; color: #888; margin-bottom: 25px; line-height: 1.4; }
 
         .status-bar {
             background: #f8f9fa;
@@ -61,7 +60,6 @@
         }
         #score { color: var(--accent-color); font-size: 1.2rem; margin-left: 5px; }
 
-        /* 그리드 스타일 */
         #grid {
             display: grid;
             grid-template-columns: repeat(5, 65px);
@@ -80,20 +78,18 @@
             background-color: var(--cell-off);
             border-radius: 15px;
             display: flex;
-            align-items: center; /* 수직 중앙 정렬 */
-            justify-content: center; /* 수평 중앙 정렬 */
+            align-items: center;
+            justify-content: center;
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
         }
 
-        /* 불이 켜진 상태 (중복 개념 없음) */
         .cell.lit {
             background-color: var(--cell-on);
             box-shadow: 0 5px 15px rgba(255, 215, 0, 0.5);
             transform: translateY(-2px);
         }
 
-        /* 스위치 트레이 & 스위치 */
         .switch-tray {
             display: flex;
             justify-content: center;
@@ -102,7 +98,8 @@
             background: #f0f2f5;
             border-radius: 20px;
             margin-bottom: 25px;
-            min-height: 60px;
+            min-height: 80px;
+            align-items: center;
         }
 
         .switch {
@@ -113,18 +110,16 @@
             box-shadow: 0 4px 10px rgba(255, 107, 107, 0.3);
             border: 3px solid white;
             transition: transform 0.2s;
+            z-index: 10;
         }
         .switch:active { cursor: grabbing; transform: scale(0.9); }
         
-        /* 각 스위치별 다른 색상 (선택 사항) */
         #s1 { background: linear-gradient(45deg, #ff9a9e, #fad0c4); }
         #s2 { background: linear-gradient(45deg, #a18cd1, #fbc2eb); }
         #s3 { background: linear-gradient(45deg, #84fab0, #8fd3f4); }
         #s4 { background: linear-gradient(45deg, #f6d365, #fda085); }
         #s5 { background: linear-gradient(45deg, #ffecd2, #fcb69f); }
 
-
-        /* 컨트롤 */
         .controls button {
             font-family: 'Jua', sans-serif;
             background-color: var(--accent-color);
@@ -143,8 +138,8 @@
             font-family: 'Jua', sans-serif;
             margin-top: 20px;
             font-size: 1.5rem;
-            color: #20bf6b; /* 성공 녹색 */
-            visibility: hidden;
+            color: #20bf6b;
+            display: none;
             text-shadow: 1px 1px 0px white;
         }
     </style>
@@ -153,8 +148,8 @@
 
     <div class="game-container">
         <div class="header">
-            <h1>✨ 나이트의 산책 ✨</h1>
-            <p>체스말 '나이트'처럼 움직여서 모든 칸을 밝혀보세요!</p>
+            <h1>✨ Let There Be Light ✨</h1>
+            <p>다섯 개의 스위치로 모든 칸을 밝혀보세요!<br></p>
         </div>
 
         <div class="status-bar">
@@ -172,8 +167,8 @@
         </div>
 
         <div class="controls">
-            <button id="resetBtn">다시 시작하기 🔄</button>
-            <div id="winMsg">🎉 와아! 성공했어요! 🎉</div>
+            <button id="resetBtn">RESET 🔄</button>
+            <div id="winMsg">🎉 스위치들의 배치는 어떤 모양인가요? 🎉</div>
         </div>
     </div>
 
@@ -186,7 +181,6 @@
         const size = 5;
         let switchLocs = {}; 
 
-        // 1. 그리드 생성
         for (let i = 0; i < 25; i++) {
             const cell = document.createElement('div');
             cell.className = 'cell';
@@ -196,7 +190,6 @@
             grid.appendChild(cell);
         }
 
-        // 2. 드래그 이벤트
         document.querySelectorAll('.switch').forEach(sw => {
             sw.addEventListener('dragstart', e => {
                 e.dataTransfer.setData('text/plain', e.target.id);
@@ -216,9 +209,7 @@
         function handleDrop(e, idx) {
             e.preventDefault();
             const id = e.dataTransfer.getData('text/plain');
-            const targetCell = e.target.closest('.cell');
-            
-            // 셀이 비어있을 때만 드롭 허용
+            const targetCell = document.querySelector(`.cell[data-idx="${idx}"]`);
             if (targetCell && targetCell.children.length === 0) {
                 switchLocs[id] = idx;
                 targetCell.appendChild(document.getElementById(id));
@@ -226,18 +217,15 @@
             }
         }
 
-        // 3. 렌더링 함수 (빨간불 로직 제거됨)
         function render() {
             const cells = document.querySelectorAll('.cell');
             const hitMap = new Array(25).fill(0);
-
-            // 나이트 이동 패턴 + 자기 자신
+            // [0,0] 추가: 자기 자신 포함
             const offsets = [[0,0], [1,2], [1,-2], [-1,2], [-1,-2], [2,1], [2,-1], [-2,1], [-2,-1]];
 
             Object.values(switchLocs).forEach(idx => {
                 const sx = idx % size;
                 const sy = Math.floor(idx / size);
-
                 offsets.forEach(([dx, dy]) => {
                     const tx = sx + dx;
                     const ty = sy + dy;
@@ -249,10 +237,7 @@
 
             let activeLits = 0;
             cells.forEach((cell, i) => {
-                // 핵심: overlap 클래스 관련 로직을 완전히 제거했습니다.
                 cell.classList.remove('lit');
-                
-                // 1번 이상 빛이 닿으면 무조건 켭니다.
                 if (hitMap[i] >= 1) {
                     cell.classList.add('lit');
                     activeLits++;
@@ -260,10 +245,9 @@
             });
 
             scoreDisplay.innerText = `${activeLits} / 25`;
-            winMsg.style.visibility = (activeLits === 25) ? 'visible' : 'hidden';
+            winMsg.style.display = (activeLits === 25) ? 'block' : 'none';
         }
 
-        // 4. 리셋 버튼
         resetBtn.addEventListener('click', () => {
             Object.keys(switchLocs).forEach(id => {
                 tray.appendChild(document.getElementById(id));

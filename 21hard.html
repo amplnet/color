@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COLORS - Word Segment Baseball</title>
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --accent: #6366f1;
+            --strike: #2ecc71;
+            --ball: #f1c40f;
+            --out: #e74c3c;
+            --seg-off: #e2e8f0;
+            --seg-on: #6366f1;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 550px;
+            width: 100%;
+            background: var(--card);
+            padding: 40px;
+            border-radius: 32px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.05), 0 10px 10px -5px rgba(0,0,0,0.02);
+            text-align: center;
+        }
+
+        h1 { 
+            font-size: 2.5rem; 
+            font-weight: 900; 
+            margin: 0; 
+            background: linear-gradient(90deg, #6366f1, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle { color: var(--text-sub); font-size: 1rem; margin-top: 8px; font-weight: 500; }
+        .hint { color: var(--accent); font-size: 0.85rem; margin-top: 15px; font-weight: 600; opacity: 0.8; }
+
+        .game-board {
+            display: flex;
+            justify-content: space-around;
+            margin: 25px 0;
+            padding: 20px;
+            background: #f1f5f9;
+            border-radius: 24px;
+        }
+
+        .slot-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .indicator {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #cbd5e1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 800;
+            font-size: 14px;
+            color: white;
+            transition: all 0.3s;
+        }
+        .indicator.s { background: var(--strike); box-shadow: 0 4px 12px rgba(46, 204, 113, 0.4); }
+        .indicator.b { background: var(--ball); box-shadow: 0 4px 12px rgba(241, 196, 15, 0.4); }
+        .indicator.o { background: var(--out); box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4); }
+
+        .slot {
+            width: 90px;
+            height: 140px;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+
+        .segment-display { position: relative; width: 40px; height: 80px; transform: scale(1.2); }
+        .seg { position: absolute; background: var(--seg-off); border-radius: 10px; cursor: pointer; transition: 0.15s; }
+        .seg:hover { background: #cbd5e1; }
+        .seg.a { top: 0; left: 5px; width: 30px; height: 5px; }
+        .seg.b { top: 5px; right: 0; width: 5px; height: 30px; }
+        .seg.c { bottom: 5px; right: 0; width: 5px; height: 30px; }
+        .seg.d { bottom: 0; left: 5px; width: 30px; height: 5px; }
+        .seg.e { bottom: 5px; left: 0; width: 5px; height: 30px; }
+        .seg.f { top: 5px; left: 0; width: 5px; height: 30px; }
+        .seg.g { top: 37px; left: 5px; width: 30px; height: 5px; }
+        .seg.on { background: var(--seg-on); box-shadow: 0 0 10px rgba(99, 102, 241, 0.4); }
+
+        .total-counter {
+            background: #e0e7ff;
+            padding: 15px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            font-weight: 800;
+        }
+        .total-num { font-size: 1.5rem; color: var(--accent); }
+        .target-num { color: var(--text-sub); font-size: 1rem; }
+
+        /* Available Letters Pool */
+        .pool-container {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8fafc;
+            border: 2px dashed #e2e8f0;
+            border-radius: 24px;
+        }
+        .pool-title { font-size: 0.85rem; color: var(--text-sub); font-weight: 700; margin-bottom: 12px; }
+        .letters-pool {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        .letter-chip {
+            padding: 8px 15px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            font-weight: 800;
+            color: var(--accent);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            font-size: 1.1rem;
+        }
+
+        .stats { display: flex; justify-content: space-between; margin-bottom: 20px; padding: 0 10px; }
+        .stat-label { font-weight: 700; color: var(--text-sub); }
+        .balls-count { color: var(--out); font-weight: 900; }
+
+        .controls { display: flex; gap: 15px; }
+        button {
+            flex: 1;
+            padding: 18px;
+            border: none;
+            border-radius: 16px;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        #play-btn { background: var(--accent); color: white; box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3); }
+        .reset-btn { background: #e2e8f0; color: #475569; }
+        button:active { transform: scale(0.98); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>COLORS</h1>
+    <div class="subtitle">Word Logic Baseball</div>
+    <div class="hint">💡 세그먼트 합 21을 만족하는 단어를 찾으세요.</div>
+
+    <div class="game-board" id="board"></div>
+
+    <div class="total-counter">
+        TOTAL SEGMENTS: <span class="total-num" id="total-on">0</span> <span class="target-num">/ 21</span>
+    </div>
+
+    <div class="pool-container">
+        <div class="pool-title">AVAILABLE LETTERS</div>
+        <div class="letters-pool" id="available-letters">
+            </div>
+    </div>
+
+    <div class="stats">
+        <div class="stat-label">BALLS LEFT: <span class="balls-count" id="balls-display">21</span></div>
+        <div class="stat-label">STATUS: <span id="game-status" style="color:var(--accent)">SCANNING...</span></div>
+    </div>
+
+    <div class="controls">
+        <button id="play-btn" onclick="playBall()">PLAY BALL</button>
+        <button class="reset-btn" onclick="resetGame()">RESET</button>
+    </div>
+</div>
+
+<script>
+    const WORDS = ["GATE", "PASS", "HOPE", "SOUP", "DASH", "SOFA", "EASY"];
+    const CHAR_MAP = {
+        'G': [1,0,1,1,1,1,1], 'A': [1,1,1,0,1,1,1], 'T': [0,0,0,1,1,1,1], 'E': [1,0,0,1,1,1,1],
+        'P': [1,1,0,0,1,1,1], 'S': [1,0,1,1,0,1,1], 'H': [0,1,1,0,1,1,1], 'O': [1,1,1,1,1,1,0],
+        'U': [0,1,1,1,1,1,0], 'D': [0,1,1,1,0,0,1], 'F': [1,0,0,0,1,1,1], 'Y': [0,1,1,1,0,1,1]
+    };
+
+    // 7세그먼트 구현 모양에 따른 텍스트 표시 설정 (D->d, T->t 등)
+    const DISPLAY_TEXT = {
+        'G':'G', 'A':'A', 'T':'t', 'E':'E', 'P':'P', 'S':'S', 
+        'H':'H', 'O':'O', 'U':'U', 'D':'d', 'F':'F', 'Y':'y'
+    };
+
+    let targetWord = "";
+    let chances = 21;
+    let currentSegments = Array.from({length: 4}, () => Array(7).fill(0));
+
+    function init() {
+        targetWord = WORDS[Math.floor(Math.random() * WORDS.length)];
+        createBoard();
+        createLetterPool();
+        updateDisplay();
+    }
+
+    function createLetterPool() {
+        const pool = document.getElementById('available-letters');
+        const uniqueLetters = [...new Set(WORDS.join(''))].sort();
+        pool.innerHTML = uniqueLetters.map(char => 
+            `<div class="letter-chip">${DISPLAY_TEXT[char] || char}</div>`
+        ).join('');
+    }
+
+    function createBoard() {
+        const board = document.getElementById('board');
+        board.innerHTML = '';
+        for (let i = 0; i < 4; i++) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'slot-wrapper';
+            wrapper.innerHTML = `
+                <div class="indicator" id="ind-${i}"></div>
+                <div class="slot" id="slot-${i}">
+                    <div class="segment-display">
+                        ${['a','b','c','d','e','f','g'].map((s, idx) => 
+                            `<div class="seg ${s}" onclick="toggleSeg(${i}, ${idx})"></div>`
+                        ).join('')}
+                    </div>
+                </div>
+                <div style="font-size:0.7rem; color:var(--text-sub); margin-top:5px;" id="count-${i}">0</div>
+            `;
+            board.appendChild(wrapper);
+        }
+    }
+
+    function toggleSeg(slotIdx, segIdx) {
+        currentSegments[slotIdx][segIdx] = currentSegments[slotIdx][segIdx] ? 0 : 1;
+        updateDisplay();
+    }
+
+    function updateDisplay() {
+        let totalOn = 0;
+        for (let i = 0; i < 4; i++) {
+            const segs = document.getElementById(`slot-${i}`).querySelectorAll('.seg');
+            let slotOn = 0;
+            segs.forEach((el, idx) => {
+                if (currentSegments[i][idx]) {
+                    el.classList.add('on');
+                    slotOn++;
+                } else {
+                    el.classList.remove('on');
+                }
+            });
+            document.getElementById(`count-${i}`).innerText = slotOn;
+            totalOn += slotOn;
+        }
+        document.getElementById('total-on').innerText = totalOn;
+        document.getElementById('total-on').style.color = (totalOn === 21) ? "var(--strike)" : "var(--accent)";
+    }
+
+    function playBall() {
+        if (chances <= 0) return;
+
+        let guess = currentSegments.map(segArr => {
+            for (let char in CHAR_MAP) {
+                if (JSON.stringify(CHAR_MAP[char]) === JSON.stringify(segArr)) return char;
+            }
+            return "?";
+        });
+
+        let strikes = 0;
+        let targetArr = targetWord.split('');
+
+        guess.forEach((char, i) => {
+            const ind = document.getElementById(`ind-${i}`);
+            if (char === targetArr[i]) {
+                strikes++;
+                ind.className = 'indicator s';
+                ind.innerText = 'S';
+            } else if (targetArr.includes(char) && char !== "?") {
+                ind.className = 'indicator b';
+                ind.innerText = 'B';
+            } else {
+                ind.className = 'indicator o';
+                ind.innerText = 'O';
+            }
+        });
+
+        chances--;
+        document.getElementById('balls-display').innerText = chances;
+
+        if (strikes === 4) {
+            document.getElementById('game-status').innerText = "UNLOCKED!";
+            document.getElementById('game-status').style.color = "var(--strike)";
+            alert(`🎉 PASSCODE ACCEPTED: [${targetWord}]\n남은 기회: ${chances}`);
+            document.getElementById('play-btn').disabled = true;
+        } else if (chances <= 0) {
+            alert(`💀 ACCESS DENIED. 정답은 ${targetWord}였습니다.`);
+            resetGame();
+        }
+    }
+
+    function resetGame() {
+        chances = 21;
+        currentSegments = Array.from({length: 4}, () => Array(7).fill(0));
+        document.getElementById('balls-display').innerText = chances;
+        document.getElementById('play-btn').disabled = false;
+        document.getElementById('game-status').innerText = "SCANNING...";
+        document.getElementById('game-status').style.color = "var(--accent)";
+        init();
+    }
+
+    window.onload = init;
+</script>
+</body>
+</html>

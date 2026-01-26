@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Labyrinth City - Mobile Optimized</title>
+    <style>
+        :root {
+            /* 1rem = 16px 기준 */
+            --bg: #000000;
+            --road-bg: #ffffff;
+            --road-text: #000000;
+            --building-text: #ffffff;
+            --grid-line: #1e293b;
+            --road-dim: 2.2rem; /* 도로 두께 rem 적용 */
+        }
+
+        body {
+            background-color: var(--bg);
+            color: #fff;
+            font-family: 'Inter', 'Pretendard', sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+
+        #map-title {
+            font-size: 2rem; /* rem 적용 */
+            font-weight: 900;
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5rem;
+            text-align: center;
+        }
+
+        /* 반응형 7x7 그리드 컨테이너 */
+        .map-container {
+            display: grid;
+            /* 도로-건물-도로-건물-도로-건물-도로 */
+            grid-template-columns: var(--road-dim) 1fr var(--road-dim) 1fr var(--road-dim) 1fr var(--road-dim);
+            grid-template-rows: var(--road-dim) 1fr var(--road-dim) 1fr var(--road-dim) 1fr var(--road-dim);
+            
+            /* 모바일 최적화: 너비는 화면의 95%, 최대 600px */
+            width: 95vw; 
+            max-width: 38rem; 
+            aspect-ratio: 1 / 1; /* 정사각형 유지 */
+            
+            border: 0.2rem solid var(--grid-line);
+            position: relative;
+            background-color: #050505;
+        }
+
+        .road-segment {
+            background-color: var(--road-bg);
+            z-index: 5;
+        }
+
+        /* 도로 라벨 rem 적용 및 폰트 확대 */
+        .road-label {
+            position: absolute;
+            color: var(--road-text);
+            font-size: 0.7rem; /* rem 적용 */
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        .h-label { height: var(--road-dim); padding: 0 0.2rem; }
+        .v-label { width: var(--road-dim); writing-mode: vertical-rl; padding: 0.2rem 0; }
+
+        /* 건물 블록 rem 적용 및 폰트 확대 */
+        .building {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem;
+            font-size: 1.2rem; /* rem 적용, 큼직하게 설정 */
+            color: var(--building-text);
+            text-align: center;
+            font-weight: 800;
+            text-transform: uppercase;
+            border: 1px solid #111;
+            background-color: #000;
+            z-index: 1;
+            word-break: break-all; /* 긴 단어 줄바꿈 */
+        }
+
+        /* 푸터 정보 */
+        .footer-info {
+            margin-top: 1.5rem;
+            font-size: 0.8rem;
+            color: #475569;
+            letter-spacing: 2px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="map-title">DISTRI3</div>
+
+    <div class="map-container" id="map">
+        </div>
+
+    <div class="footer-info">ANSWER : ????</div>
+
+    <script>
+const MAP_DATA = {
+title: "PANGRAM CITY",
+            streets: ["SHIP St", "---- St", "TURN St", "GAME St"],
+            avenues: ["TORN Ave", "GLUE Ave", "---- Ave", "DISH Ave"],
+            // 계산된 빌딩 리스트 (규칙 적용 결과)
+            buildings: [
+                "", "SALE", "", 
+                "", "????", "", 
+                "", "TAME", ""
+            ]
+        };
+
+        function renderMap() {
+            document.getElementById('map-title').innerText = MAP_DATA.title;
+            const map = document.getElementById('map');
+            map.innerHTML = '';
+
+            // 1. 도로 배경 및 라벨 배치
+            for(let r=1; r<=7; r+=2) {
+                const rd = document.createElement('div');
+                rd.className = "road-segment";
+                rd.style.gridRow = r;
+                rd.style.gridColumn = "1 / -1";
+                map.appendChild(rd);
+
+                const lbl = document.createElement('div');
+                lbl.className = "road-label h-label";
+                lbl.innerText = MAP_DATA.streets[(r-1)/2] || "";
+                lbl.style.gridRow = r;
+                lbl.style.gridColumn = "2 / 3"; 
+                map.appendChild(lbl);
+            }
+
+            for(let c=1; c<=7; c+=2) {
+                const rd = document.createElement('div');
+                rd.className = "road-segment";
+                rd.style.gridColumn = c;
+                rd.style.gridRow = "1 / -1";
+                map.appendChild(rd);
+
+                const lbl = document.createElement('div');
+                lbl.className = "road-label v-label";
+                lbl.innerText = MAP_DATA.avenues[(c-1)/2] || "";
+                lbl.style.gridColumn = c;
+                lbl.style.gridRow = "4 / 5"; 
+                map.appendChild(lbl);
+            }
+
+            // 2. 건물 배치 (3x3 = 9개)
+            let bIdx = 0;
+            for (let r = 2; r <= 6; r += 2) {
+                for (let c = 2; c <= 6; c += 2) {
+                    const bld = document.createElement('div');
+                    bld.className = "building";
+                    bld.innerText = MAP_DATA.buildings[bIdx++] || "";
+                    map.appendChild(bld);
+                }
+            }
+        }
+
+        window.onload = renderMap;
+    </script>
+</body>
+</html>

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COLORS: THE ULTIMATE QUIZ</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+
+        :root {
+            --bg: #FFFFFF;
+            --text-main: #1E293B;
+            --border: #E2E8F0;
+            --star-color: #3B82F6;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .header h1 {
+            font-size: 3.5rem;
+            font-weight: 900;
+            letter-spacing: -4px;
+            margin: 0;
+            text-transform: uppercase;
+        }
+
+        .header p {
+            color: #64748B;
+            margin-top: 15px;
+            font-weight: 500;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .quiz-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 35px;
+            gap: 20px;
+        }
+
+        .emoji-group {
+            width: 120px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 5px;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        /* 그리드 및 셀 스타일 */
+        .grid {
+            display: flex;
+            flex: 1;
+            gap: 4px;
+        }
+
+        .cell-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+        }
+
+        .cell {
+            width: 100%;
+            height: 70px;
+            border-radius: 6px;
+            border: 2px solid transparent;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .cell input {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: transparent;
+            text-align: center;
+            font-size: 1.6rem;
+            font-weight: 800;
+            outline: none;
+            text-transform: uppercase;
+        }
+
+        /* 색상 클래스 */
+        .bg-red { background-color: #FEE2E2; color: #991B1B; }
+        .bg-blue { background-color: #DBEAFE; color: #1E40AF; }
+        .bg-green { background-color: #DCFCE7; color: #166534; }
+        .bg-yellow { background-color: #FEF9C3; color: #854D0E; }
+        .bg-gray { background-color: #F1F5F9; color: #334155; } 
+        
+        .bg-white { background-color: #FFFFFF; border: 2px solid #F1F5F9; color: #1E293B; }
+        .bg-trump-red { background-color: #FFF1F2; border: 2px solid #FFE4E6; color: #BE123C; }
+
+        .cell:focus-within {
+            transform: translateY(-2px);
+            border-color: var(--star-color);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 별표 스타일 */
+        .asterisk {
+            margin-top: 10px;
+            height: 20px;
+            font-size: 1.4rem;
+            color: var(--star-color);
+            font-weight: 900;
+        }
+
+        @media (max-width: 1000px) {
+            .emoji-group { width: 50px; font-size: 2.5rem; }
+            .cell { height: 50px; }
+            .cell input { font-size: 1.1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>TWENTY-THREE</h1>
+        <p>빈 칸에 알파벳을 입력할 수 있습니다.</p>
+    </div>
+
+    <div class="container">
+        <div class="quiz-row">
+            <div class="emoji-group">🎨</div>
+            <div class="grid" id="grid-color"></div>
+        </div>
+
+        <div class="quiz-row">
+            <div class="emoji-group">🃏</div>
+            <div class="grid" id="grid-trump"></div>
+        </div>
+
+        <div class="quiz-row">
+            <div class="emoji-group">🔢</div>
+            <div class="grid" id="grid-number"></div>
+        </div>
+    </div>
+
+    <script>
+        const colorConfig = [
+            { len: 3, cls: 'bg-red', star: 2 },   // R
+            { len: 5, cls: 'bg-green', star: 2 }, // E
+            { len: 4, cls: 'bg-blue', star: 1 },  // L
+            { len: 6, cls: 'bg-yellow', star: 1 },// Y
+            { len: 5, cls: 'bg-gray', star: null }   // K
+        ];
+
+        const trumpConfig = [
+            { len: 5, cls: 'bg-white', star: null },     // S
+            { len: 5, cls: 'bg-trump-red', star: 4 }, // D
+            { len: 6, cls: 'bg-white', star: 4 },     // C
+            { len: 7, cls: 'bg-trump-red', star: null }  // H
+        ];
+
+        const numberConfig = [
+            { len: 4, cls: 'bg-gray', star: 0 },
+            { len: 3, cls: 'bg-white', star: null },
+            { len: 3, cls: 'bg-gray', star: null },
+            { len: 5, cls: 'bg-white', star: null },
+            { len: 4, cls: 'bg-gray', star: null },
+            { len: 4, cls: 'bg-white', star: null }
+        ];
+
+        function createGrid(gridId, config) {
+            const grid = document.getElementById(gridId);
+            let globalIdx = 0;
+
+            config.forEach(item => {
+                for (let i = 0; i < item.len; i++) {
+                    const unit = document.createElement('div');
+                    unit.className = 'cell-unit';
+
+                    const cell = document.createElement('div');
+                    cell.className = `cell ${item.cls}`;
+
+                    const input = document.createElement('input');
+                    input.maxLength = 1;
+                    input.dataset.idx = globalIdx;
+
+                    // 포커스 자동 이동 로직
+                    input.addEventListener('input', (e) => {
+                        if (e.target.value.length === 1) {
+                            const next = grid.querySelector(`input[data-idx="${parseInt(e.target.dataset.idx) + 1}"]`);
+                            if (next) next.focus();
+                        }
+                    });
+
+                    cell.appendChild(input);
+                    unit.appendChild(cell);
+
+                    const star = document.createElement('div');
+                    star.className = 'asterisk';
+                    if (i === item.star) star.textContent = '*';
+                    unit.appendChild(star);
+
+                    grid.appendChild(unit);
+                    globalIdx++;
+                }
+            });
+        }
+
+        createGrid('grid-color', colorConfig);
+        createGrid('grid-trump', trumpConfig);
+        createGrid('grid-number', numberConfig);
+    </script>
+</body>
+</html>

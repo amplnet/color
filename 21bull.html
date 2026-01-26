@@ -2,8 +2,8 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TWENTY-ONE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TWENTY-ONE: Security Edition</title>
     <style>
         :root {
             --bg: #f8fafc;
@@ -28,167 +28,98 @@
             min-height: 100vh;
             margin: 0;
             padding: 20px;
-            /* 드래그 방지 추가 */
             user-select: none;
             -webkit-user-select: none;
         }
 
         .container {
-            max-width: 550px;
+            max-width: 500px;
             width: 100%;
             background: var(--card);
-            padding: 40px;
+            padding: 30px 20px;
             border-radius: 32px;
-            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.05), 0 10px 10px -5px rgba(0,0,0,0.02);
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.05);
             text-align: center;
         }
 
         h1 { 
-            font-size: 2.5rem; 
+            font-size: 2rem; 
             font-weight: 900; 
-            margin: 0; 
             background: linear-gradient(90deg, #6366f1, #a855f7);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
         
-        .subtitle { color: var(--text-sub); font-size: 1rem; margin-top: 8px; font-weight: 500; }
-        .hint { color: var(--accent); font-size: 0.85rem; margin-top: 20px; font-weight: 600; opacity: 0.8; }
+        .subtitle { color: var(--text-sub); font-size: 0.9rem; margin-top: 5px; font-weight: 500; }
+        .hint { color: var(--accent); font-size: 0.8rem; margin-top: 15px; font-weight: 600; opacity: 0.8; }
 
         .game-board {
-            display: flex;
-            justify-content: space-around;
-            margin: 30px 0;
-            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin: 25px 0;
+            padding: 15px;
             background: #f1f5f9;
             border-radius: 24px;
         }
 
-        .slot-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .indicator {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: #cbd5e1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: 800;
-            font-size: 14px;
-            color: white;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        .indicator.s { background: var(--strike); box-shadow: 0 4px 12px rgba(46, 204, 113, 0.4); }
-        .indicator.b { background: var(--ball); box-shadow: 0 4px 12px rgba(241, 196, 15, 0.4); }
-        .indicator.o { background: var(--out); box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4); }
+        .slot-wrapper { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .indicator { width: 28px; height: 28px; border-radius: 50%; background: #cbd5e1; display: flex; justify-content: center; align-items: center; font-weight: 800; font-size: 12px; color: white; transition: all 0.3s; }
+        .indicator.s { background: var(--strike); }
+        .indicator.b { background: var(--ball); }
+        .indicator.o { background: var(--out); }
 
         .slot {
-            width: 90px;
-            height: 140px;
+            width: 100%;
+            aspect-ratio: 2 / 3;
             background: white;
             border: 2px solid #e2e8f0;
-            border-radius: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-        }
-        .slot:hover { border-color: var(--accent); transform: translateY(-2px); }
-
-        .segment-display { position: relative; width: 40px; height: 80px; transform: scale(1.2); }
-        .seg { position: absolute; background: var(--seg-off); border-radius: 10px; transition: 0.2s; }
-        .seg.a { top: 0; left: 5px; width: 30px; height: 5px; }
-        .seg.b { top: 5px; right: 0; width: 5px; height: 30px; }
-        .seg.c { bottom: 5px; right: 0; width: 5px; height: 30px; }
-        .seg.d { bottom: 0; left: 5px; width: 30px; height: 5px; }
-        .seg.e { bottom: 5px; left: 0; width: 5px; height: 30px; }
-        .seg.f { top: 5px; left: 0; width: 5px; height: 30px; }
-        .seg.g { top: 37px; left: 5px; width: 30px; height: 5px; }
-        .seg.on { background: var(--seg-on); box-shadow: 0 0 10px rgba(99, 102, 241, 0.3); }
-
-        .pool-container { margin-top: 30px; }
-        .pool-title { font-size: 0.85rem; color: var(--text-sub); font-weight: 700; margin-bottom: 12px; }
-        .switch-pool {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            justify-content: center;
-            min-height: 80px;
-            padding: 20px;
-            background: #f8fafc;
-            border: 2px dashed #e2e8f0;
-            border-radius: 24px;
-        }
-
-        .switch {
-            width: 55px;
-            height: 55px;
-            background: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 14px;
-            cursor: grab;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-            transition: 0.2s;
-        }
-
-        .controls { margin-top: 40px; display: flex; gap: 15px; }
-        button {
-            flex: 1;
-            padding: 18px;
-            border: none;
             border-radius: 16px;
-            font-size: 1rem;
-            font-weight: 800;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             cursor: pointer;
             transition: all 0.2s;
         }
-        #play-btn { background: var(--accent); color: white; box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3); }
-        .reset-btn { background: #e2e8f0; color: #475569; }
 
-        #chance-info { font-weight: 700; color: var(--text-sub); margin-bottom: 5px; }
+        .segment-display { position: relative; width: 30px; height: 60px; transform: scale(1.1); pointer-events: none; }
+        .seg { position: absolute; background: var(--seg-off); border-radius: 10px; }
+        .seg.a { top: 0; left: 4px; width: 22px; height: 4px; }
+        .seg.b { top: 4px; right: 0; width: 4px; height: 22px; }
+        .seg.c { bottom: 4px; right: 0; width: 4px; height: 22px; }
+        .seg.d { bottom: 0; left: 4px; width: 22px; height: 4px; }
+        .seg.e { bottom: 4px; left: 0; width: 4px; height: 22px; }
+        .seg.f { top: 4px; left: 0; width: 4px; height: 22px; }
+        .seg.g { top: 28px; left: 4px; width: 22px; height: 4px; }
+        .seg.on { background: var(--seg-on); }
+
+        .switch-pool { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; min-height: 70px; padding: 15px; background: #f8fafc; border: 2px dashed #e2e8f0; border-radius: 20px; }
+        .switch { width: 50px; height: 50px; background: white; border: 1px solid #e2e8f0; border-radius: 12px; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: all 0.2s; cursor: pointer; }
+        .switch.selected { border-color: var(--accent); background: #f5f3ff; transform: scale(1.1); }
+
+        .controls { margin-top: 30px; display: flex; gap: 12px; }
+        button { flex: 1; padding: 15px; border: none; border-radius: 16px; font-size: 0.9rem; font-weight: 800; cursor: pointer; transition: 0.2s; }
+        #play-btn { background: var(--accent); color: white; }
+        .reset-btn { background: #e2e8f0; color: #475569; }
+        #chance-info { font-weight: 700; color: var(--text-sub); margin-top: 15px; font-size: 0.9rem; }
     </style>
 </head>
-<body oncontextmenu="return false;"> <div class="container">
+<body oncontextmenu="return false;">
+
+<div class="container">
     <h1>TWENTY-ONE</h1>
-    <div class="subtitle">Bulls and Cows</div>
-    <div class="hint">💡 숫자를 다시 클릭하면 재배치할 수 있습니다.</div>
+    <div class="subtitle">네자리 숫자 야구 게임입니다.</div>
+    <div class="hint">💡 부품 선택 후 슬롯을 터치하세요!</div>
 
     <div class="game-board">
-        <div class="slot-wrapper">
-            <div class="indicator" id="ind-0"></div>
-            <div class="slot" id="slot-0" data-index="0" ondrop="drop(event)" ondragover="allowDrop(event)" onclick="clearSlot(0)"></div>
-        </div>
-        <div class="slot-wrapper">
-            <div class="indicator" id="ind-1"></div>
-            <div class="slot" id="slot-1" data-index="1" ondrop="drop(event)" ondragover="allowDrop(event)" onclick="clearSlot(1)"></div>
-        </div>
-        <div class="slot-wrapper">
-            <div class="indicator" id="ind-2"></div>
-            <div class="slot" id="slot-2" data-index="2" ondrop="drop(event)" ondragover="allowDrop(event)" onclick="clearSlot(2)"></div>
-        </div>
-        <div class="slot-wrapper">
-            <div class="indicator" id="ind-3"></div>
-            <div class="slot" id="slot-3" data-index="3" ondrop="drop(event)" ondragover="allowDrop(event)" onclick="clearSlot(3)"></div>
-        </div>
+        <div class="slot-wrapper"><div class="indicator" id="ind-0"></div><div class="slot" id="slot-0" onclick="handleSlotClick(0)"></div></div>
+        <div class="slot-wrapper"><div class="indicator" id="ind-1"></div><div class="slot" id="slot-1" onclick="handleSlotClick(1)"></div></div>
+        <div class="slot-wrapper"><div class="indicator" id="ind-2"></div><div class="slot" id="slot-2" onclick="handleSlotClick(2)"></div></div>
+        <div class="slot-wrapper"><div class="indicator" id="ind-3"></div><div class="slot" id="slot-3" onclick="handleSlotClick(3)"></div></div>
     </div>
 
     <div id="chance-info">CHANCES LEFT: 5</div>
-
-    <div class="pool-container">
-        <div class="pool-title">AVAILABLE COMPONENTS</div>
-        <div class="switch-pool" id="pool" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
-    </div>
+    <div class="switch-pool" id="pool"></div>
 
     <div class="controls">
         <button id="play-btn" onclick="playBall()">PLAY BALL</button>
@@ -197,63 +128,55 @@
 </div>
 
 <script>
-    /* --- SECURITY BLOCK --- */
-    // 1. 단축키 차단 (F12, Ctrl+U, Ctrl+Shift+I 등)
+    const _0x1a2b = "UjA5TlJVTlBURTlRVXcxOQ=="; 
+
     document.addEventListener('keydown', function(e) {
-        if (e.keyCode == 123 || 
-            (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || 
-            (e.ctrlKey && e.keyCode == 85)) {
+        if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74 || e.keyCode == 67)) || (e.ctrlKey && e.keyCode == 85)) {
             e.preventDefault();
-            alert("보안을 위해 개발자 도구 및 소스 보기를 제한합니다.");
             return false;
         }
     });
 
-    // 2. 개발자 도구 감지 (창 크기 변화 및 디버거 체크)
-    let devtoolsOpen = false;
-    const element = new Image();
-    Object.defineProperty(element, 'id', {
-        get: function() {
-            devtoolsOpen = true;
-            location.reload(); // 도구 열면 강제 새로고침
+    // 2. 개발자 도구 디버깅 차단
+    setInterval(function() {
+        const start = Date.now();
+        debugger;
+        if (Date.now() - start > 100) {
+            location.reload();
         }
-    });
-    console.log('%c', element);
+    }, 1000);
 
-
-    const _0x4d2a = "R09ORUNPTE9SUw=="; 
+    /* --- GAME LOGIC --- */
     const SEG_DATA = {
-        '0': [['a','b','f'], ['c','d','e']],
-        '2': [['a','b','g'], ['g','e','d']],
-        '3': [['a','b','g'], ['g','c','d']],
-        '4': [['f','g','b'], ['g','b','c']],
-        '5': [['a','f','g'], ['g','c','d']],
-        '6': [['a','f','g'], ['e','d','c']],
-        '7': [['a','b','c']],
-        '9': [['a','b','f'], ['g','c','d']]
+        '0': [['a','b','f'], ['c','d','e']], '2': [['a','b','g'], ['g','e','d']],
+        '3': [['a','b','g'], ['g','c','d']], '4': [['f','g','b'], ['g','b','c']],
+        '5': [['a','f','g'], ['g','c','d']], '6': [['a','f','g'], ['e','d','c']],
+        '7': [['a','b','c']], '9': [['a','b','f'], ['g','c','d']]
     };
 
     let target = [];
     let chances = 5;
     let currentSlots = [[], [], [], []];
+    let selectedSwitchId = null;
 
     function init() {
-        const others = ['0', '2', '3', '4', '5', '6', '9'].sort(() => Math.random() - 0.5).slice(0, 3);
+        const nums = ['0', '2', '3', '4', '5', '6', '9'];
+        const others = nums.sort(() => Math.random() - 0.5).slice(0, 3);
         target = [...others, '7'].sort(() => Math.random() - 0.5);
         const pool = document.getElementById('pool');
         pool.innerHTML = '';
         let allSwitches = [];
         target.forEach(n => {
-            SEG_DATA[n].forEach(segs => allSwitches.push({ id: 'sw-' + Math.random().toString(36).substr(2, 5), segs }));
+            SEG_DATA[n].forEach(segs => {
+                allSwitches.push({ id: 'sw-' + Math.random().toString(36).substr(2, 5), segs });
+            });
         });
         allSwitches.sort(() => Math.random() - 0.5).forEach(sw => {
             const el = document.createElement('div');
-            el.className = 'switch';
-            el.draggable = true;
-            el.id = sw.id;
+            el.className = 'switch'; el.id = sw.id;
             el.dataset.segs = JSON.stringify(sw.segs);
-            el.innerHTML = renderSegIcon(sw.segs, 0.4);
-            el.ondragstart = (e) => e.dataTransfer.setData("text", e.target.id);
+            el.innerHTML = renderSegIcon(sw.segs, 0.35);
+            el.onclick = () => toggleSwitchSelection(sw.id);
             pool.appendChild(el);
         });
         updateDisplay();
@@ -267,38 +190,40 @@
         return html + '</div>';
     }
 
-    function allowDrop(e) { e.preventDefault(); }
-
-    function drop(e) {
-        e.preventDefault();
-        const id = e.dataTransfer.getData("text");
-        const el = document.getElementById(id);
-        const targetSlot = e.target.closest('.slot');
-        if (targetSlot) {
-            const idx = targetSlot.dataset.index;
-            if (currentSlots[idx].length < 2) {
-                currentSlots[idx].push({ id: el.id, segs: JSON.parse(el.dataset.segs) });
-                el.style.display = 'none';
-                updateDisplay();
-            }
+    function toggleSwitchSelection(id) {
+        if (selectedSwitchId === id) {
+            document.getElementById(id).classList.remove('selected');
+            selectedSwitchId = null;
+        } else {
+            if (selectedSwitchId) document.getElementById(selectedSwitchId).classList.remove('selected');
+            selectedSwitchId = id;
+            document.getElementById(id).classList.add('selected');
         }
     }
 
-    function clearSlot(idx) {
-        currentSlots[idx].forEach(item => {
-            const el = document.getElementById(item.id);
-            el.style.display = 'flex';
-        });
-        currentSlots[idx] = [];
-        document.getElementById(`ind-${idx}`).className = 'indicator';
-        document.getElementById(`ind-${idx}`).innerText = '';
-        updateDisplay();
+    function handleSlotClick(idx) {
+        if (selectedSwitchId) {
+            const swEl = document.getElementById(selectedSwitchId);
+            if (currentSlots[idx].length < 2) {
+                currentSlots[idx].push({ id: swEl.id, segs: JSON.parse(swEl.dataset.segs) });
+                swEl.style.display = 'none';
+                swEl.classList.remove('selected');
+                selectedSwitchId = null;
+                updateDisplay();
+            }
+        } else if (currentSlots[idx].length > 0) {
+            currentSlots[idx].forEach(item => { document.getElementById(item.id).style.display = 'flex'; });
+            currentSlots[idx] = [];
+            document.getElementById(`ind-${idx}`).className = 'indicator';
+            document.getElementById(`ind-${idx}`).innerText = '';
+            updateDisplay();
+        }
     }
 
     function updateDisplay() {
         for (let i = 0; i < 4; i++) {
             const combined = [...new Set(currentSlots[i].flatMap(s => s.segs))];
-            document.getElementById(`slot-${i}`).innerHTML = renderSegIcon(combined, 1.2);
+            document.getElementById(`slot-${i}`).innerHTML = renderSegIcon(combined, 1.0);
         }
     }
 
@@ -312,10 +237,7 @@
             return null;
         });
 
-        if (guess.includes(null)) {
-            alert("모든 자리에 스위치를 조합해 숫자를 완성해주세요!");
-            return;
-        }
+        if (guess.includes(null)) return alert("시스템 정렬을 완료하십시오.");
 
         let strikeCount = 0;
         guess.forEach((num, i) => {
@@ -331,14 +253,14 @@
         });
 
         if (strikeCount === 4) {
-            // Base64를 다시 디코딩하여 보여줌
-            alert("정답입니다! 진행 코드: " + atob(_0x4d2a));
+            const res = atob(atob(_0x1a2b));
+            alert("정답입니다! 진행 코드: " + res);
             document.getElementById('play-btn').disabled = true;
         } else {
             chances--;
             document.getElementById('chance-info').innerText = `CHANCES LEFT: ${chances}`;
             if (chances <= 0) {
-                alert(`게임 오버! 정답은 ${target.join('')}였습니다.`);
+                alert("ACCESS DENIED");
                 resetGame();
             }
         }
@@ -347,11 +269,10 @@
     function resetGame() {
         chances = 5;
         currentSlots = [[], [], [], []];
+        selectedSwitchId = null;
         document.getElementById('chance-info').innerText = `CHANCES LEFT: 5`;
         document.getElementById('play-btn').disabled = false;
-        document.querySelectorAll('.indicator').forEach(i => {
-            i.className = 'indicator'; i.innerText = '';
-        });
+        document.querySelectorAll('.indicator').forEach(i => { i.className = 'indicator'; i.innerText = ''; });
         init();
     }
 

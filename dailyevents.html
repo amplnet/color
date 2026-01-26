@@ -118,8 +118,8 @@
 
     <div class="controls">
         <div class="btn-group">
-            <button class="rotate-btn" onclick="adjustTime(-1)">🕚 1시간 뒤로</button>
-            <button class="rotate-btn" onclick="adjustTime(1)">🕙 1시간 앞으로</button>
+            <button class="rotate-btn" onclick="adjustTime(1)">🕚 1시간 뒤로</button>
+            <button class="rotate-btn" onclick="adjustTime(-1)">🕙 1시간 앞으로</button>
         </div>
         <div id="delay-info" class="status-msg">정답 형식 : 한글</div>
     </div>
@@ -133,30 +133,30 @@
         let manualDelayHours = 0;
 
         const nodeData = [
-            { id: 0,  color: 'var(--ev-black)',    hasStar: true },
-            { id: 1,  color: 'var(--ev-red)',   hasStar: false },
-            { id: 2,  color: 'var(--ev-red)',  hasStar: false },
-            { id: 3,  color: 'var(--ev-red)', hasStar: true },
-            { id: 4,  color: 'var(--ev-red)', hasStar: false },
-            { id: 5,  color: 'var(--ev-red)',    hasStar: false },
-            { id: 6,  color: 'var(--ev-orange)',   hasStar: false },
-            { id: 7,  color: 'var(--ev-orange)',  hasStar: true },
-            { id: 8,  color: 'var(--ev-orange)', hasStar: false },
-            { id: 9,  color: 'var(--ev-orange)', hasStar: false },
-            { id: 10, color: 'var(--ev-orange)',    hasStar: true },
-            { id: 11, color: 'var(--ev-green)',   hasStar: false },
-            { id: 12, color: 'var(--ev-green)',  hasStar: false },
-            { id: 13, color: 'var(--ev-green)', hasStar: false },
-            { id: 14, color: 'var(--ev-green)', hasStar: false },
-            { id: 15, color: 'var(--ev-green)',    hasStar: false },
-            { id: 16, color: 'var(--ev-green)',   hasStar: false },
+            { id: 0,  color: 'var(--ev-black)',    hasStar: false },
+            { id: 1,  color: 'var(--ev-black)',   hasStar: false },
+            { id: 2,  color: 'var(--ev-black)',  hasStar: false },
+            { id: 3,  color: 'var(--ev-black)', hasStar: false },
+            { id: 4,  color: 'var(--ev-black)', hasStar: false },
+            { id: 5,  color: 'var(--ev-black)',    hasStar: false },
+            { id: 6,  color: 'var(--ev-red)',   hasStar: true },
+            { id: 7,  color: 'var(--ev-red)',  hasStar: false },
+            { id: 8,  color: 'var(--ev-red)', hasStar: false },
+            { id: 9,  color: 'var(--ev-red)', hasStar: true },
+            { id: 10, color: 'var(--ev-red)',    hasStar: false },
+            { id: 11, color: 'var(--ev-orange)',   hasStar: true },
+            { id: 12, color: 'var(--ev-orange)',  hasStar: false },
+            { id: 13, color: 'var(--ev-orange)', hasStar: false },
+            { id: 14, color: 'var(--ev-orange)', hasStar: false },
+            { id: 15, color: 'var(--ev-orange)',    hasStar: true },
+            { id: 16, color: 'var(--ev-orange)',   hasStar: false },
             { id: 17, color: 'var(--ev-blue)',  hasStar: true },
-            { id: 18, color: 'var(--ev-blue)', hasStar: false },
+            { id: 18, color: 'var(--ev-blue)', hasStar: true },
             { id: 19, color: 'var(--ev-blue)', hasStar: false },
             { id: 20, color: 'var(--ev-blue)',    hasStar: false },
-            { id: 21, color: 'var(--ev-blue)',   hasStar: false },
+            { id: 21, color: 'var(--ev-blue)',   hasStar: true },
             { id: 22, color: 'var(--ev-black)',  hasStar: false },
-            { id: 23, color: 'var(--ev-black)', hasStar: true }
+            { id: 23, color: 'var(--ev-black)', hasStar: false }
         ];
 
 

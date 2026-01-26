@@ -58,19 +58,41 @@
         .word-slot { position: relative; display: inline-block; min-width: 45px; padding-bottom: 5px; border-bottom: 3px solid var(--underline-color); }
         .word { opacity: 0; transform: translateY(10px); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); color: var(--text-color); display: block; }
 
-        /* =========================================
-           [수정됨] 풍성한 파스텔 일러스트 배경
-        ========================================= */
+        /* --- 복사 버튼 스타일 --- */
+        .copy-container {
+            display: none; /* 기본적으로 숨김 */
+            margin-top: 25px;
+            animation: slideIn 0.5s ease forwards;
+        }
+        .copy-btn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 15px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 800;
+            cursor: pointer;
+            font-size: 1rem;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+            transition: all 0.2s ease;
+        }
+        .copy-btn:hover { background-color: #ff5252; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4); }
+        .copy-btn:active { transform: translateY(0); }
+
+        /* 9번 클릭(s9) 시 버튼 보이기 */
+        #s9:checked ~ .content-card .copy-container {
+            display: block;
+        }
+
+        /* --- 배경 및 애니메이션 --- */
         .scene {
-            position: relative; width: 100%; height: 320px; /* 높이 약간 더 확보 */
+            position: relative; width: 100%; height: 320px;
             border-radius: 20px; overflow: hidden;
             box-shadow: inset 0 0 20px rgba(0,0,0,0.05);
         }
 
-        /* 배경 레이어 공통 */
         .bg-layer { position: absolute; width: 100%; left: 0; pointer-events: none; }
-
-        /* 1. 하늘 (그라데이션 + 햇살) */
         .bg-sky {
             height: 100%; top: 0;
             background: linear-gradient(to bottom, var(--sky-top), var(--sky-bottom));
@@ -81,8 +103,6 @@
             background: radial-gradient(circle, var(--sun-glow) 20%, transparent 70%);
             opacity: 0.6; mix-blend-mode: overlay;
         }
-
-        /* 2. 구름 (더 자연스러운 형태) */
         .bg-clouds {
             height: 100%; top: 0; z-index: 1;
             background-image: 
@@ -98,10 +118,7 @@
         }
         @keyframes cloudMove { from { background-position: 0 0; } to { background-position: 100% 0; } }
 
-        /* 3. 산맥 (원경 & 근경) */
-        .bg-mountains {
-            height: 50%; bottom: 30%; z-index: 2;
-        }
+        .bg-mountains { height: 50%; bottom: 30%; z-index: 2; }
         .mtn-far {
             position: absolute; bottom: 20%; left: 0; width: 120%; height: 100%;
             background: var(--mtn-far);
@@ -113,10 +130,7 @@
             clip-path: polygon(0 100%, 15% 30%, 35% 60%, 55% 20%, 75% 50%, 95% 10%, 100% 100%);
         }
 
-        /* 4. 숲 (둥글둥글한 형태) */
-        .bg-forest {
-            height: 40%; bottom: 15%; z-index: 3;
-        }
+        .bg-forest { height: 40%; bottom: 15%; z-index: 3; }
         .forest-back {
             position: absolute; bottom: 10%; left: -5%; width: 110%; height: 100%;
             background: var(--forest-back);
@@ -128,14 +142,12 @@
             border-radius: 60% 40% 0 0 / 40% 30% 0 0;
         }
 
-        /* 5. 언덕과 꽃 (가장 앞) */
         .bg-hill-front {
             height: 25%; bottom: 0; z-index: 4;
             background: var(--hill-color);
             border-radius: 100% 80% 0 0 / 80% 60% 0 0;
             box-shadow: inset 0 5px 15px rgba(255,255,255,0.3);
         }
-        /* 꽃 장식 (CSS 그라데이션 점) */
         .flowers {
             position: absolute; width: 100%; height: 100%;
             background-image: 
@@ -146,8 +158,7 @@
             opacity: 0.7;
         }
 
-        /* --- 캐릭터 (z-index 조정) --- */
-        .actor { position: absolute; pointer-events: none; z-index: 10; } /* 배경보다 앞에 */
+        .actor { position: absolute; pointer-events: none; z-index: 10; }
         .actor img { width: 100%; height: auto; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.1)); }
 
         .dog { bottom: 15px; left: 40%; transform: translateX(-50%); width: 100px; }
@@ -156,7 +167,7 @@
         .fox-container { bottom: 20px; left: 10%; width: 90px; opacity: 0; z-index: 11; }
         .fox-click-label { position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: pointer; z-index: 20; display: none; }
 
-        /* 로직 및 애니메이션 (변경 없음) */
+        /* 로직 애니메이션 */
         #s1:checked ~ .content-card .n1, #s1:checked ~ .content-card .w1,
         #s2:checked ~ .content-card .n1, #s2:checked ~ .content-card .n2, #s2:checked ~ .content-card .w1, #s2:checked ~ .content-card .w2,
         #s3:checked ~ .content-card .n1, #s3:checked ~ .content-card .n2, #s3:checked ~ .content-card .n3, #s3:checked ~ .content-card .w1, #s3:checked ~ .content-card .w2, #s3:checked ~ .content-card .w3,
@@ -167,12 +178,11 @@
         #s8:checked ~ .content-card .n1, #s8:checked ~ .content-card .n2, #s8:checked ~ .content-card .n3, #s8:checked ~ .content-card .n4, #s8:checked ~ .content-card .n5, #s8:checked ~ .content-card .n6, #s8:checked ~ .content-card .n7, #s8:checked ~ .content-card .n8, #s8:checked ~ .content-card .w1, #s8:checked ~ .content-card .w2, #s8:checked ~ .content-card .w3, #s8:checked ~ .content-card .w4, #s8:checked ~ .content-card .w5, #s8:checked ~ .content-card .w6, #s8:checked ~ .content-card .w7, #s8:checked ~ .content-card .w8,
         #s9:checked ~ .content-card .notice-line, #s9:checked ~ .content-card .word { display: block; opacity: 1; transform: translateY(0); }
 
-        /* 특정 단계에서 라인 보이기 */
         #s1:checked ~ .content-card .n1, #s2:checked ~ .content-card .n2, #s3:checked ~ .content-card .n3, 
         #s4:checked ~ .content-card .n4, #s5:checked ~ .content-card .n5, #s6:checked ~ .content-card .n6, 
         #s7:checked ~ .content-card .n7, #s8:checked ~ .content-card .n8, #s9:checked ~ .content-card .n9 { display: block; }
 
-        /* --- 여우 점프 로직 --- */
+        /* 여우 점프 로직 */
         #s0:checked ~ .content-card .fox-1 { opacity: 1; pointer-events: auto; }
         #s0:checked ~ .content-card .fox-1 .fox-click-label { display: block; }
         #s1:checked ~ .content-card .fox-1 { animation: jump-arc 0.8s forwards; opacity: 1; }
@@ -267,7 +277,36 @@
             <div class="actor fox-container fox-8"><label for="s8" class="fox-click-label"></label><img src="https://amplnet.github.io/color/foxx.png" alt="Fox"></div>
             <div class="actor fox-container fox-9"><label for="s9" class="fox-click-label"></label><img src="https://amplnet.github.io/color/foxx.png" alt="Fox"></div>
         </div>
+
+        <div class="copy-container">
+            <button class="copy-btn" onclick="copyAnswer()">Copy Answer</button>
+        </div>
     </div>
 
+    <script>
+        function copyAnswer() {
+            // 복사할 텍스트 구성
+            const textToCopy = "The quick brown fox jumps over the lazy dog";
+            
+            // 클립보드 API 사용
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                alert("정답이 클립보드에 복사되었습니다!");
+            }).catch(err => {
+                console.error('복사 실패:', err);
+                // 대비책 (구형 브라우저 대응)
+                const textArea = document.createElement("textarea");
+                textArea.value = textToCopy;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    alert("정답이 클립보드에 복사되었습니다!");
+                } catch (err) {
+                    alert("복사에 실패했습니다. 수동으로 복사해주세요.");
+                }
+                document.body.removeChild(textArea);
+            });
+        }
+    </script>
 </body>
 </html>

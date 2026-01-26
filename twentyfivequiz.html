@@ -2,7 +2,8 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Knight Puzzle - Colorful Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Knight Puzzle - Touch Edition</title>
     <link href="https://fonts.googleapis.com/css2?family=Jua&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -15,6 +16,9 @@
             --switch-gradient: linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);
         }
 
+        /* 전역 스크롤 방지 및 모바일 최적화 */
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
         body {
             font-family: 'Poppins', 'Jua', sans-serif;
             background-image: var(--bg-gradient);
@@ -24,96 +28,94 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            margin: 0;
             padding: 20px;
-            box-sizing: border-box;
         }
 
         .game-container {
             background: var(--card-bg);
-            padding: 40px;
+            padding: 30px;
             border-radius: 30px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.1);
             text-align: center;
-            max-width: 500px;
+            max-width: 450px;
             width: 100%;
         }
 
         .header h1 {
             font-family: 'Jua', sans-serif;
-            font-size: 2.2rem;
+            font-size: 2rem;
             color: var(--accent-color);
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
-
-        .header p { font-size: 1.4rem; color: #888; margin-bottom: 25px; line-height: 1.4; }
+        .header p { font-size: 1.1rem; color: #888; margin-bottom: 20px; }
 
         .status-bar {
             background: #f8f9fa;
-            padding: 10px 25px;
+            padding: 8px 20px;
             border-radius: 50px;
             display: inline-block;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             font-weight: 700;
             color: #666;
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
         }
-        #score { color: var(--accent-color); font-size: 1.2rem; margin-left: 5px; }
+        #score { color: var(--accent-color); font-size: 1.1rem; }
 
         #grid {
             display: grid;
-            grid-template-columns: repeat(5, 65px);
-            grid-template-rows: repeat(5, 65px);
-            gap: 10px;
-            margin: 0 auto 30px auto;
-            justify-content: center;
-            padding: 15px;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin: 0 auto 20px auto;
+            padding: 10px;
             background: #fafafa;
             border-radius: 20px;
-            border: 3px solid #eee;
+            border: 2px solid #eee;
         }
 
         .cell {
-            width: 65px; height: 65px;
+            aspect-ratio: 1 / 1;
             background-color: var(--cell-off);
-            border-radius: 15px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+            cursor: pointer;
         }
 
         .cell.lit {
             background-color: var(--cell-on);
-            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.5);
-            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(255, 215, 0, 0.4);
         }
 
         .switch-tray {
             display: flex;
             justify-content: center;
-            gap: 15px;
+            gap: 12px;
             padding: 15px;
             background: #f0f2f5;
             border-radius: 20px;
-            margin-bottom: 25px;
-            min-height: 80px;
-            align-items: center;
+            margin-bottom: 20px;
+            min-height: 70px;
+            cursor: pointer;
         }
 
         .switch {
-            width: 50px; height: 50px;
-            background: var(--switch-gradient);
+            width: 45px; height: 45px;
             border-radius: 50%;
-            cursor: grab;
-            box-shadow: 0 4px 10px rgba(255, 107, 107, 0.3);
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
             border: 3px solid white;
-            transition: transform 0.2s;
-            z-index: 10;
+            transition: all 0.2s;
         }
-        .switch:active { cursor: grabbing; transform: scale(0.9); }
         
+        /* 선택된 스위치 강조 효과 */
+        .switch.selected {
+            transform: scale(1.2);
+            border-color: var(--accent-color);
+            box-shadow: 0 0 15px var(--accent-color);
+            z-index: 100;
+        }
+
         #s1 { background: linear-gradient(45deg, #ff9a9e, #fad0c4); }
         #s2 { background: linear-gradient(45deg, #a18cd1, #fbc2eb); }
         #s3 { background: linear-gradient(45deg, #84fab0, #8fd3f4); }
@@ -125,22 +127,19 @@
             background-color: var(--accent-color);
             color: white;
             border: none;
-            padding: 12px 30px;
-            font-size: 1.1rem;
+            padding: 12px 25px;
+            font-size: 1rem;
             border-radius: 50px;
             cursor: pointer;
-            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
-            transition: all 0.2s;
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
         }
-        .controls button:hover { background-color: #ff5252; transform: translateY(-2px); }
 
         #winMsg {
             font-family: 'Jua', sans-serif;
-            margin-top: 20px;
-            font-size: 1.5rem;
+            margin-top: 15px;
+            font-size: 1.3rem;
             color: #20bf6b;
             display: none;
-            text-shadow: 1px 1px 0px white;
         }
     </style>
 </head>
@@ -148,7 +147,7 @@
 
     <div class="game-container">
         <div class="header">
-            <p>다섯 개의 스위치로 모든 칸을 밝혀보세요!<br></p>
+            <p>스위치를 선택한 후 칸을 터치하세요!</p>
         </div>
 
         <div class="status-bar">
@@ -158,16 +157,16 @@
         <div id="grid"></div>
 
         <div class="switch-tray" id="tray">
-            <div class="switch" draggable="true" id="s1"></div>
-            <div class="switch" draggable="true" id="s2"></div>
-            <div class="switch" draggable="true" id="s3"></div>
-            <div class="switch" draggable="true" id="s4"></div>
-            <div class="switch" draggable="true" id="s5"></div>
+            <div class="switch" id="s1"></div>
+            <div class="switch" id="s2"></div>
+            <div class="switch" id="s3"></div>
+            <div class="switch" id="s4"></div>
+            <div class="switch" id="s5"></div>
         </div>
 
         <div class="controls">
             <button id="resetBtn">RESET 🔄</button>
-            <div id="winMsg">🎉 스위치들의 배치는 어떤 모양인가요? 🎉</div>
+            <div id="winMsg">🎉스위치들은 어떤 모양으로 배치됐나요?🎉</div>
         </div>
     </div>
 
@@ -177,41 +176,56 @@
         const tray = document.getElementById('tray');
         const resetBtn = document.getElementById('resetBtn');
         const winMsg = document.getElementById('winMsg');
-        const size = 5;
+        
         let switchLocs = {}; 
+        let selectedSwitch = null;
 
+        // 1. 그리드 생성
         for (let i = 0; i < 25; i++) {
             const cell = document.createElement('div');
             cell.className = 'cell';
             cell.dataset.idx = i;
-            cell.addEventListener('dragover', e => e.preventDefault());
-            cell.addEventListener('drop', e => handleDrop(e, i));
+            cell.onclick = () => handleCellClick(i);
             grid.appendChild(cell);
         }
 
+        // 2. 스위치 선택 이벤트
         document.querySelectorAll('.switch').forEach(sw => {
-            sw.addEventListener('dragstart', e => {
-                e.dataTransfer.setData('text/plain', e.target.id);
-            });
+            sw.onclick = (e) => {
+                e.stopPropagation(); // 트레이 클릭 이벤트 전파 방지
+                if (selectedSwitch) selectedSwitch.classList.remove('selected');
+                
+                if (selectedSwitch === sw) {
+                    selectedSwitch = null; // 같은 거 누르면 선택 취소
+                } else {
+                    selectedSwitch = sw;
+                    sw.classList.add('selected');
+                }
+            };
         });
 
-        tray.addEventListener('dragover', e => e.preventDefault());
-        tray.addEventListener('drop', e => {
-            const id = e.dataTransfer.getData('text/plain');
-            if(switchLocs[id] !== undefined) {
-                delete switchLocs[id];
-                tray.appendChild(document.getElementById(id));
+        // 3. 트레이 클릭 시 스위치 회수
+        tray.onclick = () => {
+            if (selectedSwitch && switchLocs[selectedSwitch.id] !== undefined) {
+                delete switchLocs[selectedSwitch.id];
+                tray.appendChild(selectedSwitch);
+                selectedSwitch.classList.remove('selected');
+                selectedSwitch = null;
                 render();
             }
-        });
+        };
 
-        function handleDrop(e, idx) {
-            e.preventDefault();
-            const id = e.dataTransfer.getData('text/plain');
+        // 4. 셀 클릭 시 이동
+        function handleCellClick(idx) {
+            if (!selectedSwitch) return;
+
             const targetCell = document.querySelector(`.cell[data-idx="${idx}"]`);
-            if (targetCell && targetCell.children.length === 0) {
+            if (targetCell.children.length === 0) {
+                const id = selectedSwitch.id;
                 switchLocs[id] = idx;
-                targetCell.appendChild(document.getElementById(id));
+                targetCell.appendChild(selectedSwitch);
+                selectedSwitch.classList.remove('selected');
+                selectedSwitch = null;
                 render();
             }
         }
@@ -219,17 +233,16 @@
         function render() {
             const cells = document.querySelectorAll('.cell');
             const hitMap = new Array(25).fill(0);
-            // [0,0] 추가: 자기 자신 포함
             const offsets = [[0,0], [1,2], [1,-2], [-1,2], [-1,-2], [2,1], [2,-1], [-2,1], [-2,-1]];
 
             Object.values(switchLocs).forEach(idx => {
-                const sx = idx % size;
-                const sy = Math.floor(idx / size);
+                const sx = idx % 5;
+                const sy = Math.floor(idx / 5);
                 offsets.forEach(([dx, dy]) => {
                     const tx = sx + dx;
                     const ty = sy + dy;
-                    if (tx >= 0 && tx < size && ty >= 0 && ty < size) {
-                        hitMap[ty * size + tx]++;
+                    if (tx >= 0 && tx < 5 && ty >= 0 && ty < 5) {
+                        hitMap[ty * 5 + tx]++;
                     }
                 });
             });
@@ -247,13 +260,15 @@
             winMsg.style.display = (activeLits === 25) ? 'block' : 'none';
         }
 
-        resetBtn.addEventListener('click', () => {
+        resetBtn.onclick = () => {
+            if (selectedSwitch) selectedSwitch.classList.remove('selected');
+            selectedSwitch = null;
             Object.keys(switchLocs).forEach(id => {
                 tray.appendChild(document.getElementById(id));
             });
             switchLocs = {};
             render();
-        });
+        };
     </script>
 </body>
 </html>

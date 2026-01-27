@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Chrono Lock - Symmetric Grid Edition</title>
+    <style>
+        :root {
+            --bg: #f8fafc; --card: #ffffff; --primary: #2563eb;
+            --accent: #d97706; --text: #0f172a; --muted: #64748b;
+            --border: #e2e8f0; --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        body {
+            background-color: var(--bg); color: var(--text); font-family: 'Pretendard', sans-serif;
+            display: flex; flex-direction: column; align-items: center; padding: 1rem; margin: 0;
+            touch-action: manipulation; min-height: 100vh;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .manual-section {
+            width: 100%; max-width: 500px; background: var(--card); border-radius: 16px;
+            padding: 15px; margin-bottom: 20px; box-shadow: var(--shadow);
+            border-left: 5px solid var(--primary); font-size: 0.85rem; box-sizing: border-box;
+        }
+        .manual-section h3 { margin: 0 0 5px 0; color: var(--primary); font-size: 1rem; }
+
+        h2 { color: var(--primary); letter-spacing: 2px; font-weight: 900; margin: 10px 0 20px; font-size: 1.5rem; }
+
+        /* 아이콘 보관소 최적화 */
+        .icon-vault {
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; padding: 12px;
+            background: var(--card); border-radius: 20px; box-shadow: var(--shadow);
+            margin-bottom: 25px; width: 100%; max-width: 480px; box-sizing: border-box;
+        }
+        .rune {
+            width: 56px; height: 56px; background: #f1f5f9; border: 2px solid var(--border);
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.2s; overflow: hidden;
+        }
+        .rune img { width: 85%; height: 85%; object-fit: contain; pointer-events: none; }
+        .rune.selected { border-color: var(--primary); transform: scale(1.05); background: #fff; box-shadow: 0 0 15px rgba(37, 99, 235, 0.2); }
+
+        /* 대칭형 격자 시스템 최적화 (가로 너비 대응) */
+        .system-grid {
+            display: flex; flex-direction: column; align-items: center; gap: 40px;
+            width: 100%; max-width: 600px; padding: 25px 10px; background: var(--card);
+            border-radius: 28px; box-shadow: var(--shadow); box-sizing: border-box;
+        }
+        
+        .row { display: flex; justify-content: center; align-items: center; gap: 4px; width: 100%; }
+        
+        .node { display: flex; flex-direction: column; align-items: center; gap: 8px; flex-shrink: 0; }
+        .node-label { font-size: 0.6rem; font-weight: 800; color: var(--muted); letter-spacing: 0.5px; }
+        
+        /* 소켓 크기 가변형 수정 */
+        .socket {
+            width: 58px; height: 58px; background: #fff; border: 2px dashed var(--border);
+            border-radius: 16px; display: flex; align-items: center; justify-content: center;
+            transition: 0.3s; overflow: hidden;
+        }
+        .socket img { width: 85%; height: 85%; object-fit: contain; }
+        .socket.lit { border-style: solid; border-color: var(--accent); background: #fffbeb; }
+
+        /* 연산자 버튼 그룹 터치 영역 확대 */
+        .op-container { min-width: 50px; display: flex; justify-content: center; flex-shrink: 0; }
+        .op-group { display: flex; flex-direction: column; gap: 4px; }
+        .op-row { display: flex; gap: 4px; }
+        .op-btn {
+            width: 32px; height: 32px; background: #f8fafc; border: 1px solid var(--border);
+            border-radius: 8px; font-size: 0.9rem; font-weight: 800; cursor: pointer;
+            color: var(--muted); display: flex; align-items: center; justify-content: center;
+            transition: 0.1s;
+        }
+        .op-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 2px 5px rgba(37, 99, 235, 0.3); }
+
+        /* 결과 창 및 리셋 */
+        #target-display {
+            display: none; margin-top: 30px; text-align: center; transition: 0.4s;
+        }
+        .target-text { font-size: 1.3rem; font-weight: 900; color: var(--muted); margin-bottom: 4px; }
+        .sub-text { font-size: 1.0rem; font-weight: 500; color: var(--muted); opacity: 0.8; }
+        #target-display.success .target-text { 
+            color: var(--accent); text-shadow: 0 0 15px rgba(217, 119, 6, 0.3);
+            animation: pulse 1s infinite alternate;
+        }
+        @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.05); } }
+
+        .reset-btn {
+            margin-top: 25px; padding: 16px 45px; background: #fff; border: 2px solid var(--border);
+            border-radius: 14px; font-weight: 800; cursor: pointer; transition: 0.2s;
+            color: var(--text); box-shadow: 0 2px 4px rgba(0,0,0,0.05); font-size: 1rem;
+        }
+
+        /* 아주 작은 화면을 위한 대응 */
+        @media (max-width: 380px) {
+            .socket, .rune { width: 50px; height: 50px; }
+            .op-container { min-width: 40px; }
+            .op-btn { width: 28px; height: 28px; }
+            .row { gap: 2px; }
+        }
+    </style>
+</head>
+<body>
+
+    <h2>NINETEEN</h2>
+
+    <div class="icon-vault" id="vault" onclick="handleVaultClick(event)">
+        <div class="rune" id="r1"><img src="https://amplnet.github.io/color/19.png"></div>
+        <div class="rune" id="r2"><img src="https://amplnet.github.io/color/oil.png"></div>
+        <div class="rune" id="r3"><img src="https://amplnet.github.io/color/vomit.png"></div>
+        <div class="rune" id="r4"><img src="https://amplnet.github.io/color/postpone.png"></div>
+        <div class="rune" id="r5"><img src="https://amplnet.github.io/color/movie.png"></div>
+        <div class="rune" id="r6"><img src="https://amplnet.github.io/color/broth.png"></div>
+        <div class="rune" id="r7"><img src="https://amplnet.github.io/color/hand.png"></div>
+    </div>
+
+    <div class="system-grid">
+        <div class="row">
+            <div class="node"><div class="node-label">FIRST</div><div class="socket" id="s1" onclick="handleSocketClick(this)"></div></div>
+            <div class="op-container" id="op-container-0"></div>
+            <div class="node"><div class="node-label">SECOND</div><div class="socket" id="s2" onclick="handleSocketClick(this)"></div></div>
+            <div class="op-container" id="op-container-1"></div>
+            <div class="node"><div class="node-label">THIRD</div><div class="socket" id="s3" onclick="handleSocketClick(this)"></div></div>
+            <div class="op-container" id="op-container-2"></div>
+            <div class="node"><div class="node-label">FOURTH</div><div class="socket" id="s4" onclick="handleSocketClick(this)"></div></div>
+        </div>
+
+        <div class="row">
+            <div class="op-container" id="op-container-3"></div> 
+            <div class="node"><div class="node-label">FIFTH</div><div class="socket" id="s5" onclick="handleSocketClick(this)"></div></div>
+            <div class="op-container" id="op-container-4"></div>
+            <div class="node"><div class="node-label">SIXTH</div><div class="socket" id="s6" onclick="handleSocketClick(this)"></div></div>
+            <div class="op-container" id="op-container-5"></div>
+            <div class="node"><div class="node-label">SEVENTH</div><div class="socket" id="s7" onclick="handleSocketClick(this)"></div></div>
+        </div>
+    </div>
+
+    <div id="target-display">
+        <div class="target-text">= 19를 만들어주세요</div>
+        <div class="sub-text">(ANSWER TYPE = +　-　*　/)</div>
+    </div>
+
+    <button class="reset-btn" onclick="resetPlacement()">RESET PLACEMENT</button>
+
+    <script>
+        const hiddenNumbers = [5, 2, 0, 6, 8, 19, 9];
+        const ops = ['+', '-', '*', '/'];
+        let selectedOps = ['+', '+', '+', '+', '+', '+'];
+        let selectedRune = null;
+
+        function handleVaultClick(ev) {
+            const rune = ev.target.closest('.rune');
+            if (rune) {
+                if (selectedRune) selectedRune.classList.remove('selected');
+                selectedRune = rune;
+                rune.classList.add('selected');
+            }
+        }
+
+        function handleSocketClick(socket) {
+            if (selectedRune) {
+                if (socket.children.length > 0) document.getElementById('vault').appendChild(socket.firstChild);
+                socket.appendChild(selectedRune);
+                selectedRune.classList.remove('selected'); selectedRune = null;
+            } else if (socket.children.length > 0) {
+                document.getElementById('vault').appendChild(socket.firstChild);
+            }
+            updateStatus();
+        }
+
+        function updateStatus() {
+            const sockets = document.querySelectorAll('.socket');
+            let placedCount = 0;
+            sockets.forEach(s => {
+                const filled = s.children.length > 0;
+                s.classList.toggle('lit', filled);
+                if(filled) placedCount++;
+            });
+
+            const targetDisp = document.getElementById('target-display');
+            if (placedCount === 7) {
+                targetDisp.style.display = "block";
+                renderAllOps();
+                calculate();
+            } else {
+                targetDisp.style.display = "none";
+                targetDisp.classList.remove('success');
+            }
+        }
+
+        function renderAllOps() {
+            for (let i = 0; i < 6; i++) {
+                const container = document.getElementById(`op-container-${i}`);
+                if (container.children.length > 0) continue;
+
+                const group = document.createElement('div');
+                group.className = 'op-group';
+                const r1 = document.createElement('div'); r1.className = 'op-row';
+                const r2 = document.createElement('div'); r2.className = 'op-row';
+
+                ops.forEach((symbol, idx) => {
+                    const btn = document.createElement('div');
+                    btn.className = 'op-btn' + (selectedOps[i] === symbol ? ' active' : '');
+                    btn.innerText = symbol === '*' ? '×' : symbol === '/' ? '÷' : symbol;
+                    btn.onclick = () => {
+                        selectedOps[i] = symbol;
+                        group.querySelectorAll('.op-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        calculate();
+                    };
+                    if (idx < 2) r1.appendChild(btn); else r2.appendChild(btn);
+                });
+                
+                group.appendChild(r1); group.appendChild(r2);
+                container.appendChild(group);
+            }
+        }
+
+        function calculate() {
+            let eq = "";
+            for (let i = 0; i < 7; i++) {
+                eq += hiddenNumbers[i];
+                if (i < 6) eq += selectedOps[i];
+            }
+            const targetDisp = document.getElementById('target-display');
+            try {
+                const res = eval(eq);
+                if (res === 19) targetDisp.classList.add('success');
+                else targetDisp.classList.remove('success');
+            } catch(e) { targetDisp.classList.remove('success'); }
+        }
+
+        function resetPlacement() {
+            const vault = document.getElementById('vault');
+            document.querySelectorAll('.socket').forEach(socket => {
+                if (socket.firstChild) vault.appendChild(socket.firstChild);
+            });
+            for (let i = 0; i < 6; i++) document.getElementById(`op-container-${i}`).innerHTML = '';
+            selectedOps = ['+', '+', '+', '+', '+', '+'];
+            if (selectedRune) selectedRune.classList.remove('selected');
+            selectedRune = null;
+            updateStatus();
+        }
+
+        updateStatus();
+    </script>
+</body>
+</html>

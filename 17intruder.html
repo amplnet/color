@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Labyrinth - Seamless Swap Puzzle</title>
+    <style>
+        :root {
+            --bg: #f8fafc; --card: #ffffff; --primary: #2563eb;
+            --accent: #d97706; --text: #0f172a; --muted: #64748b;
+            --border: #cbd5e1; /* 테두리 색상 약간 진하게 변경 */
+            --shadow: 0 10px 25px rgba(0,0,0,0.08);
+        }
+        body {
+            background-color: var(--bg); color: var(--text); font-family: 'Pretendard', sans-serif;
+            display: flex; flex-direction: column; align-items: center; padding: 1rem; margin: 0;
+            min-height: 100vh; touch-action: manipulation;
+        }
+
+        .manual-section {
+            width: 100%; max-width: 480px; background: var(--card); border-radius: 20px;
+            padding: 15px; margin-bottom: 25px; box-shadow: var(--shadow);
+            border-left: 5px solid var(--primary); font-size: 0.85rem; box-sizing: border-box;
+        }
+        h2 { color: var(--primary); letter-spacing: 2px; font-weight: 900; margin: 15px 0; }
+
+        /* 컨테이너 패딩 축소 */
+        .puzzle-container {
+            display: flex; flex-direction: column; align-items: center;
+            background: var(--card); padding: 10px; /* 패딩 줄임 */
+            border-radius: 16px; /* 컨테이너 모서리도 약간 줄임 */
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border); /* 외곽선 추가 */
+        }
+
+        /* 4x4 메인 그리드 (간격 없음) */
+        .grid-4x4 {
+            display: grid;
+            /* 테두리 포함 정확한 크기 계산을 위해 box-sizing 고려 */
+            grid-template-columns: repeat(4, 80px);
+            grid-template-rows: repeat(4, 80px);
+            gap: 0; /* 핵심 변경: 간격 제거 */
+            border-bottom: 1px solid var(--border); /* 17번째 칸과의 경계선 */
+        }
+
+        /* 17번째 추가 슬롯 (간격 없이 밀착) */
+        .extra-slot {
+            width: 100%; display: flex; justify-content: flex-end;
+            padding-top: 0; /* 패딩 제거 */
+            border-top: none; /* 점선 제거 */
+            margin-top: 0; /* 마진 제거 */
+        }
+        
+        /* 17번째 슬롯의 윗 테두리 제거하여 그리드와 합체 */
+        #slot-16 { border-top: none; }
+
+        /* 슬롯 스타일 (정사각형, 얇은 테두리) */
+        .slot {
+            width: 80px; height: 80px; background: #f1f5f9;
+            border: 1px solid var(--border); /* 테두리 얇게 */
+            border-radius: 0; /* 핵심 변경: 네모낳게 */
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; position: relative; overflow: hidden;
+            box-sizing: border-box; /* 테두리를 크기에 포함 */
+            transition: border-color 0.2s, z-index 0s; /* transform 제거 */
+        }
+        .slot img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; display: block; }
+        
+        /* 선택 시 시각 효과 (크기 변화 없이 테두리만 강조) */
+        .slot.selected {
+            border: 3px solid var(--primary); /* 두꺼운 파란색 테두리 */
+            z-index: 10; /* 이웃한 셀 테두리 위로 표시 */
+        }
+
+        #status-msg { margin-top: 20px; font-weight: 800; color: var(--muted); min-height: 24px; }
+        .success #status-msg { color: var(--accent); }
+
+        .btn-group { margin-top: 25px; display: flex; gap: 12px; }
+        button {
+            padding: 14px 35px; background: #fff; border: 2px solid var(--border);
+            border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        button:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); }
+
+        /* 모바일 대응 사이즈 조정 */
+        @media (max-width: 380px) {
+            .grid-4x4 { grid-template-columns: repeat(4, 70px); grid-template-rows: repeat(4, 70px); }
+            .slot { width: 70px; height: 70px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="manual-section">
+        <h3>🗝️ FIND THE INTRUDER</h3>
+        <p>ANS?ER T?PE = INTRUDER * {(1,4)+(2,3)+(3,2)+(4,1)}</p>
+    </div>
+
+    <h2>SE?ENTEEN</h2>
+
+    <div class="puzzle-container">
+        <div class="grid-4x4" id="main-grid"></div>
+        <div class="extra-slot">
+            <div class="slot" id="slot-16" onclick="handleTileClick(16)"></div>
+        </div>
+    </div>
+
+    <div id="status-msg">RESET COMPLETED.</div>
+
+    <div class="btn-group">
+        <button onclick="shuffleTiles()">SHUFFLE</button>
+        <button onclick="resetPuzzle()">RESET</button>
+    </div>
+
+    <script>
+        // 이미지 소스 유지
+        const imageUrls = [
+"https://amplnet.github.io/color/puzzle/am.png",
+"https://amplnet.github.io/color/puzzle/and.png",
+"https://amplnet.github.io/color/puzzle/are.png",
+"https://amplnet.github.io/color/puzzle/because.png",
+"https://amplnet.github.io/color/puzzle/can.png",
+"https://amplnet.github.io/color/puzzle/gone.png",
+"https://amplnet.github.io/color/puzzle/i.png",
+"https://amplnet.github.io/color/puzzle/ii.png",
+"https://amplnet.github.io/color/puzzle/in.png",
+"https://amplnet.github.io/color/puzzle/letters.png",
+"https://amplnet.github.io/color/puzzle/not.png",
+"https://amplnet.github.io/color/puzzle/place.png",
+"https://amplnet.github.io/color/puzzle/sad.png",
+"https://amplnet.github.io/color/puzzle/see.png",
+"https://amplnet.github.io/color/puzzle/the.png",
+"https://amplnet.github.io/color/puzzle/their.png",
+"https://amplnet.github.io/color/puzzle/them.png"
+        ];
+
+        let currentOrder = [...Array(17).keys()]; 
+        let firstSelectedIndex = null;
+        let isSolved = false;
+
+        function init() {
+            const grid = document.getElementById('main-grid');
+            grid.innerHTML = '';
+            for (let i = 0; i < 16; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'slot';
+                slot.id = `slot-${i}`;
+                slot.onclick = () => handleTileClick(i);
+                grid.appendChild(slot);
+            }
+            shuffleTiles();
+        }
+
+        function render() {
+            for (let i = 0; i < 17; i++) {
+                const slot = document.getElementById(`slot-${i}`);
+                slot.innerHTML = `<img src="${imageUrls[currentOrder[i]]}" alt="Tile">`;
+                slot.classList.remove('selected');
+            }
+            checkWin();
+        }
+
+        function handleTileClick(index) {
+            if (isSolved) return;
+            const clickedSlot = document.getElementById(`slot-${index}`);
+
+            if (firstSelectedIndex === null) {
+                firstSelectedIndex = index;
+                clickedSlot.classList.add('selected');
+                document.getElementById('status-msg').innerText = "CLICK IMAGES AND S?AP.";
+            } else if (firstSelectedIndex === index) {
+                firstSelectedIndex = null;
+                clickedSlot.classList.remove('selected');
+                document.getElementById('status-msg').innerText = "DISMISSED.";
+            } else {
+                const temp = currentOrder[firstSelectedIndex];
+                currentOrder[firstSelectedIndex] = currentOrder[index];
+                currentOrder[index] = temp;
+                firstSelectedIndex = null;
+                render();
+            }
+        }
+
+        function checkWin() {
+            const win = currentOrder.every((val, idx) => val === idx);
+            if (win) {
+                isSolved = true;
+                document.body.classList.add('success');
+                document.getElementById('status-msg').innerText = "";
+            }
+        }
+
+        function shuffleTiles() {
+            isSolved = false;
+            document.body.classList.remove('success');
+            for (let i = currentOrder.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [currentOrder[i], currentOrder[j]] = [currentOrder[j], currentOrder[i]];
+            }
+            firstSelectedIndex = null;
+            render();
+            document.getElementById('status-msg').innerText = "SHUFFLED.";
+        }
+
+        function resetPuzzle() {
+            isSolved = false;
+            document.body.classList.remove('success');
+            currentOrder = [...Array(17).keys()];
+            firstSelectedIndex = null;
+            render();
+            document.getElementById('status-msg').innerText = "RESETTED.";
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>

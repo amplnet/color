@@ -161,9 +161,9 @@
         </div>
     </div>
 
-    <div id="status-light">잠겨있음</div>
+    <div id="status-light">LOC?ED</div>
 
-    <button class="reset-btn" onclick="resetLock()">자물쇠 리셋</button>
+    <button class="reset-btn" onclick="resetLock()">RESET</button>
 
     <script>
         const dialData = [
@@ -219,7 +219,7 @@
             if (match) {
                 isUnlocked = true;
                 container.classList.add('unlocked');
-                status.innerText = "ANSWER TYPE : ENGLISH";
+                status.innerText = "ANS?ER TYPE : ENGLISH";
                 status.classList.add('unlocked');
                 if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
             }

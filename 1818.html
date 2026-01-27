@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pastel Memory Lock</title>
+    <style>
+        :root {
+            --bg: #fdf2f8; /* 아주 연한 핑크 배경 */
+            --card: #ffffff;
+            --primary: #f472b6; /* 진한 파스텔 핑크 */
+            --accent: #facc15; /* 골드 포인트 */
+            --text: #475569;
+            --muted: #94a3b8;
+            --border: #e2e8f0;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            
+            /* 파스텔톤 색상 정의 */
+            --pastel-pink: #fbcfe8;
+            --pastel-yellow: #fef08a;
+            --pastel-blue: #bae6fd;
+            --metal-gradient: linear-gradient(145deg, #e2e8f0, #cbd5e1);
+            --shackle-gradient: linear-gradient(to bottom, #94a3b8, #cbd5e1, #94a3b8);
+        }
+        body {
+            background-color: var(--bg); color: var(--text); font-family: 'Pretendard', sans-serif;
+            display: flex; flex-direction: column; align-items: center; padding: 2rem; margin: 0;
+            min-height: 100vh;
+        }
+
+        .manual-section {
+            width: 100%; max-width: 400px; background: var(--card); border-radius: 20px;
+            padding: 20px; margin-bottom: 40px; box-shadow: var(--shadow);
+            border: 2px solid var(--primary); font-size: 0.95rem; line-height: 1.6; text-align: center;
+        }
+        .manual-section h3 { margin: 0 0 10px 0; color: var(--primary); font-size: 1.2rem; }
+
+        /* --- 자물쇠 컨테이너 및 고리 --- */
+        .lock-container {
+            position: relative; width: 340px; padding-top: 90px;
+        }
+        .lock-shackle {
+            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+            width: 180px; height: 140px; 
+            border: 20px solid transparent; /* 그라데이션 border를 위한 트릭 */
+            border-image: var(--shackle-gradient) 1;
+            border-bottom: none; border-radius: 100px 100px 0 0; z-index: 1;
+            transition: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); /* 튕기는 효과 */
+            box-shadow: inset 0 5px 10px rgba(0,0,0,0.1), 0 -5px 10px rgba(0,0,0,0.05);
+            background-origin: border-box; background-clip: content-box, border-box;
+        }
+        .lock-container.unlocked .lock-shackle { 
+            transform: translate(-50%, -50px) rotate(-15deg); 
+            border-image: linear-gradient(to bottom, var(--accent), #fde68a, var(--accent)) 1;
+        }
+
+        /* --- 자물쇠 몸체 --- */
+        .lock-body {
+            position: relative; z-index: 2; 
+            background: var(--metal-gradient); /* 금속 질감 배경 */
+            padding: 30px 20px;
+            border-radius: 24px; 
+            box-shadow: 
+                0 20px 25px -5px rgba(0, 0, 0, 0.2), 
+                inset 0 2px 3px rgba(255,255,255,0.6),
+                inset 0 -2px 3px rgba(0,0,0,0.1);
+            display: flex; justify-content: space-around; align-items: center;
+            border: 3px solid #cbd5e1;
+        }
+
+        /* --- 다이얼 유닛 --- */
+        .dial-unit { 
+            display: flex; flex-direction: column; align-items: center; gap: 8px; 
+            padding: 10px; border-radius: 16px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+        /* 각 다이얼 파스텔 색상 적용 */
+        .dial-1 { background-color: var(--pastel-pink); }
+        .dial-2 { background-color: var(--pastel-yellow); }
+        .dial-3 { background-color: var(--pastel-blue); }
+
+        /* 화살표 버튼 */
+        .arrow-btn {
+            width: 40px; height: 30px; background: rgba(255,255,255,0.6); border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 8px; cursor: pointer; color: var(--text); font-weight: bold;
+            display: flex; align-items: center; justify-content: center; transition: 0.2s;
+            font-size: 1.2rem;
+        }
+        .arrow-btn:hover { background: rgba(255,255,255,0.9); transform: scale(1.05); }
+        .dial-1 .arrow-btn { color: #db2777; }
+        .dial-2 .arrow-btn { color: #ca8a04; }
+        .dial-3 .arrow-btn { color: #0284c7; }
+
+        /* 다이얼 휠 */
+        .wheel {
+            width: 70px; height: 90px; background: var(--card); 
+            border: 4px solid #fff; /* 흰색 테두리로 입체감 */
+            border-radius: 14px; position: relative; overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 
+                inset 0 5px 10px rgba(0,0,0,0.1), 
+                inset 0 -5px 10px rgba(0,0,0,0.05),
+                0 4px 6px rgba(0,0,0,0.05); /* 외부 그림자 */
+        }
+        .dial-1 .wheel { border-color: #fce7f3; }
+        .dial-2 .wheel { border-color: #fef9c3; }
+        .dial-3 .wheel { border-color: #e0f2fe; }
+
+        .wheel-content {
+            font-size: 2rem; font-weight: 900; color: var(--text);
+            transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* 상태 메시지 및 리셋 버튼 */
+        #status-light {
+            margin-top: 40px; font-weight: 900; letter-spacing: 1px;
+            color: var(--muted); transition: 0.5s; font-size: 1.3rem;
+            text-transform: uppercase;
+        }
+        #status-light.unlocked { 
+            color: var(--primary); 
+            text-shadow: 0 0 20px var(--pastel-pink);
+            animation: pulse 1s infinite alternate;
+        }
+        @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.05); } }
+
+        .reset-btn {
+            margin-top: 30px; padding: 14px 40px; 
+            background: var(--card); color: var(--primary); 
+            border: 2px solid var(--primary); border-radius: 14px;
+            cursor: pointer; font-size: 1rem; font-weight: 700;
+            transition: 0.2s; box-shadow: var(--shadow);
+        }
+        .reset-btn:hover { background: var(--primary); color: #fff; transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+
+    <div class="manual-section">
+        <h3>🔐 18 🔐</h3>
+    </div>
+
+    <div class="lock-container" id="lock-container">
+        <div class="lock-shackle"></div>
+        <div class="lock-body">
+            <div class="dial-unit dial-1">
+                <button class="arrow-btn" onclick="rotate(0, -1)">▲</button>
+                <div class="wheel"><div id="wheel-0" class="wheel-content">매</div></div>
+                <button class="arrow-btn" onclick="rotate(0, 1)">▼</button>
+            </div>
+            <div class="dial-unit dial-2">
+                <button class="arrow-btn" onclick="rotate(1, -1)">▲</button>
+                <div class="wheel"><div id="wheel-1" class="wheel-content">작</div></div>
+                <button class="arrow-btn" onclick="rotate(1, 1)">▼</button>
+            </div>
+            <div class="dial-unit dial-3">
+                <button class="arrow-btn" onclick="rotate(2, -1)">▲</button>
+                <div class="wheel"><div id="wheel-2" class="wheel-content">나</div></div>
+                <button class="arrow-btn" onclick="rotate(2, 1)">▼</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="status-light">잠겨있음</div>
+
+    <button class="reset-btn" onclick="resetLock()">자물쇠 리셋</button>
+
+    <script>
+        const dialData = [
+            ['매', '일', '의', '기', '록', '물'], // Dial 1
+            ['작', '성', '한', '기', '억', '은'], // Dial 2
+            ['나', '만', '의', '문', '장', '들']  // Dial 3
+        ];
+
+        // 정답 설정: "일"(1) - "기"(3) - "장"(4)
+        const password = [1, 3, 4]; 
+        let currentIndices = [0, 0, 0];
+        let isUnlocked = false;
+
+        function rotate(dialIdx, direction) {
+            if (isUnlocked) return;
+            
+            currentIndices[dialIdx] = (currentIndices[dialIdx] + direction + 6) % 6;
+            updateUI();
+            checkPassword();
+        }
+
+        function updateUI() {
+            for (let i = 0; i < 3; i++) {
+                const el = document.getElementById(`wheel-${i}`);
+                // 튕기는 애니메이션 효과
+                el.style.transition = 'none';
+                el.style.transform = 'translateY(' + (direction * 10) + 'px) scale(0.8)';
+                el.style.opacity = '0.5';
+                
+                setTimeout(() => {
+                    el.innerText = dialData[i][currentIndices[i]];
+                    el.style.transition = '0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                    el.style.transform = 'translateY(0) scale(1)';
+                    el.style.opacity = '1';
+                }, 50);
+            }
+        }
+        
+        // 회전 방향 추적을 위한 변수
+        let direction = 0;
+        const originalRotate = rotate;
+        rotate = function(dialIdx, dir) {
+            direction = dir;
+            originalRotate(dialIdx, dir);
+        }
+
+
+        function checkPassword() {
+            const match = currentIndices.every((val, idx) => val === password[idx]);
+            const container = document.getElementById('lock-container');
+            const status = document.getElementById('status-light');
+
+            if (match) {
+                isUnlocked = true;
+                container.classList.add('unlocked');
+                status.innerText = "ANSWER TYPE : ENGLISH";
+                status.classList.add('unlocked');
+                if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+            }
+        }
+
+        function resetLock() {
+            isUnlocked = false;
+            currentIndices = [0, 0, 0];
+            document.getElementById('lock-container').classList.remove('unlocked');
+            const status = document.getElementById('status-light');
+            status.innerText = "잠겨있음";
+            status.classList.remove('unlocked');
+            direction = 0; // 리셋 시 방향 초기화
+            updateUI();
+        }
+
+        updateUI();
+    </script>
+</body>
+</html>

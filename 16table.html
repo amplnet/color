@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Visual Trace: Final Edition</title>
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+    <style>
+        :root {
+            /* COLORS 테마 팔레트 */
+            --bg-main: #f8fafc;
+            --glass: rgba(255, 255, 255, 0.85);
+            --border-soft: #f1f5f9;
+            
+            /* 테마 컬러 */
+            --row1: #ff7675; --row2: #55efc4; --row3: #74b9ff; --row4: #fab1a0;
+            --col3: #a29bfe; 
+
+            --grid-gap: 12px;
+            --img-size: 70px; /* 이미지 슬롯 크기 */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Pretendard', sans-serif; }
+
+        body {
+            background-color: var(--bg-main);
+            background-image: radial-gradient(circle at 10% 10%, #ffeaa7 0%, transparent 20%),
+                              radial-gradient(circle at 90% 90%, #8ec5fc 0%, transparent 20%);
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; padding: 20px; overflow: hidden;
+        }
+
+        .container {
+            max-width: 550px; width: 100%;
+            background: var(--glass);
+            backdrop-filter: blur(25px);
+            padding: 40px; border-radius: 45px;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.08);
+            border: 1px solid rgba(255,255,255,0.4);
+            position: relative;
+        }
+
+        /* 4행 5열 그리드 (마지막 열은 이미지용) */
+        .grid-wrapper {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr) var(--img-size);
+            grid-template-rows: repeat(4, 1fr) var(--img-size);
+            gap: var(--grid-gap);
+            position: relative;
+        }
+
+        .arrow-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* 화살표 공통: 그림 직전까지만 이어지도록 너비/높이 계산 */
+        .line-h, .line-v { position: absolute; }
+        
+        /* 가로선: 4개 칸(80%)을 지나 이미지 슬롯 경계에서 멈춤 */
+        .line-h {
+            height: 3px; left: 0;
+            width: calc(100% - var(--img-size) - var(--grid-gap)); 
+            top: calc((100% / 5) * (var(--row) - 0.5));
+            transform: translateY(-50%);
+        }
+        .head-h {
+            position: absolute;
+            top: calc((100% / 5) * (var(--row) - 0.5));
+            left: calc(100% - var(--img-size) - var(--grid-gap));
+            border-top: 7px solid transparent; border-bottom: 7px solid transparent;
+            border-left: 12px solid var(--color);
+            transform: translateY(-50%);
+        }
+
+        /* 세로선: 4개 행(80%)을 지나 하단 이미지 슬롯 경계에서 멈춤 */
+        .line-v {
+            width: 3px; top: 0;
+            height: calc(100% - var(--img-size) - var(--grid-gap));
+            left: calc((100% / 5) * (var(--col) - 0.5));
+            transform: translateX(-50%);
+            background: var(--col3);
+        }
+        .head-v {
+            position: absolute;
+            left: calc((100% / 5) * (var(--col) - 0.5));
+            top: calc(100% - var(--img-size) - var(--grid-gap));
+            border-left: 7px solid transparent; border-right: 7px solid transparent;
+            border-top: 12px solid var(--col3);
+            transform: translateX(-50%);
+        }
+
+        .slot {
+            aspect-ratio: 1; background: white;
+            border-radius: 15px; border: 1px solid var(--border-soft);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.01);
+        }
+
+        .img-slot {
+            width: 100%; aspect-ratio: 1;
+            background: rgba(255,255,255,0.6);
+            border-radius: 18px; border: 2px dashed #d1d5db;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .img-slot img { width: 65%; height: 65%; object-fit: contain; opacity: 0.7; }
+
+        .title { font-size: 1.6rem; font-weight: 900; color: #334155; margin-bottom: 30px; letter-spacing: -1px; text-align: left;}
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+<div class="container">
+    <h1 class="title">THE PANGRAM TA?LE</h1>
+
+    <div class="grid-wrapper">
+        <div class="arrow-overlay">
+            <div class="line-h" style="--row: 1; background: var(--row1);"></div>
+            <div class="head-h" style="--row: 1; --color: var(--row1);"></div>
+            
+            <div class="line-h" style="--row: 2; background: var(--row2);"></div>
+            <div class="head-h" style="--row: 2; --color: var(--row2);"></div>
+            
+            <div class="line-h" style="--row: 3; background: var(--row3);"></div>
+            <div class="head-h" style="--row: 3; --color: var(--row3);"></div>
+            
+            <div class="line-h" style="--row: 4; background: var(--row4);"></div>
+            <div class="head-h" style="--row: 4; --color: var(--color: var(--row4));"></div>
+            
+            <div class="line-v" style="--col: 3;"></div>
+            <div class="head-v" style="--col: 3;"></div>
+        </div>
+
+        <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="X"></div>
+        <div class="img-slot"><img src="https://amplnet.github.io/color/16/kodu.png" alt="CORD"></div>
+
+        <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+        <div class="img-slot"><img src="https://amplnet.github.io/color/16/nals.png" alt="X"></div>
+
+        <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+        <div class="img-slot"><img src="https://amplnet.github.io/color/16/question.png" alt="X"></div>
+
+        <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+        <div class="img-slot"><img src="https://amplnet.github.io/color/16/kuda.png" alt="X"></div>
+
+        <div></div><div></div>
+        <div class="img-slot"><img src="https://amplnet.github.io/color/16/banji.png" alt="X"></div>
+        <div></div><div></div>
+    </div>
+</div>
+
+<script>
+    // 보안 스크립트
+    document.addEventListener('keydown', e => {
+        if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) {
+            e.preventDefault();
+        }
+    });
+</script>
+
+</body>
+</html>

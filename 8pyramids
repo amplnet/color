@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Pyramid Flow</title>
+    <style>
+        :root {
+            --color-1: #000000; --color-2: #cccccc; --color-3: #ff4d4d; --color-4: #ffeb3b;
+            --color-5: #4caf50; --color-6: #Ff9800; --color-7: #2196f3; --color-8: #9c27b0;
+        }
+
+        body {
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+            font-family: 'Pretendard', -apple-system, sans-serif;
+        }
+
+        .header {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto 40px;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .pyramid-wrapper {
+            position: relative;
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+        }
+
+        .group-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .color-column {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 50px;
+            padding: 15px;
+            background: rgba(255,255,255,0.5);
+            border-radius: 20px;
+            width: 120px;
+        }
+
+        .layer {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+            z-index: 1;
+            position: relative;
+        }
+
+        .layer-label {
+            position: absolute;
+            left: -35px;
+            font-size: 10px;
+            font-weight: bold;
+            color: #999;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        /* 공통 동그라미 스타일 */
+        .circle {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            font-size: 11px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border: none;
+            padding: 0;
+            text-align: center;
+            outline: none; /* 클릭 시 강조선 제거 */
+        }
+
+        /* 입력 필드용 추가 스타일 */
+        input.circle {
+            cursor: text;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        input.circle:focus {
+            transform: scale(1.1);
+            box-shadow: 0 0 8px rgba(0,0,0,0.2);
+        }
+
+        .layer-1 .circle { width: 32px; height: 32px; font-size: 13px; }
+        .layer-2 .circle { width: 26px; height: 26px; font-size: 11px; }
+        .layer-3 .circle { width: 22px; height: 22px; font-size: 10px; }
+
+        .bg-1 { background-color: var(--color-1); } .bg-2 { background-color: var(--color-2); }
+        .bg-3 { background-color: var(--color-3); } .bg-4 { background-color: var(--color-4); }
+        .bg-5 { background-color: var(--color-5); } .bg-6 { background-color: var(--color-6); }
+        .bg-7 { background-color: var(--color-7); } .bg-8 { background-color: var(--color-8); }
+
+        .footer-image {
+            text-align: center;
+            margin-top: 60px;
+            padding-bottom: 40px;
+        }
+        .footer-image img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        @media (max-width: 600px) {
+            .pyramid-wrapper { gap: 15px; }
+            .color-column { width: 100px; padding: 10px; }
+            .layer-label { left: -25px; font-size: 8px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h2>EI??T ??RA?I?S</h2>
+    ?SA??? A???A?ETS = E, S, I, A, R, N, T, O
+</div>
+
+<div class="pyramid-wrapper" id="mainContainer"></div>
+
+<div class="footer-image">
+    <img src="https://amplnet.github.io/color/88.png" alt="Footer Logic Image">
+</div>
+
+<script>
+    const container = document.getElementById('mainContainer');
+    const textsR1 = ["나트륨", "내부에", "그것은", "아니오", "부정사", "그래서", "위쪽에", "외계인"];
+    const labels = ["KR", "EN", "KR"];
+
+    for (let i = 1; i <= 8; i++) {
+        const column = document.createElement('div');
+        column.className = `color-column col-${i}`;
+        
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("class", "group-svg");
+        column.appendChild(svg);
+
+        for (let l = 1; l <= 3; l++) {
+            const layer = document.createElement('div');
+            layer.className = `layer layer-${l}`;
+            
+            const labelSpan = document.createElement('span');
+            labelSpan.className = 'layer-label';
+            labelSpan.innerText = labels[l-1];
+            layer.appendChild(labelSpan);
+
+            const circleCount = 4 - l;
+            for (let c = 0; c < circleCount; c++) {
+                let circle;
+                
+                if (l === 1) {
+                    // 첫 줄은 텍스트가 채워진 일반 div
+                    circle = document.createElement('div');
+                    circle.className = `circle bg-${i}`;
+                    circle.innerText = textsR1[i-1][c] || "";
+                } else {
+                    // 둘째 줄과 셋째 줄은 직접 타이핑 가능한 input
+                    circle = document.createElement('input');
+                    circle.type = "text";
+                    circle.className = `circle bg-${i}`;
+                    circle.maxLength = 2; // 한 글자 혹은 두 글자 제한
+                    circle.placeholder = ""; // 공백으로 둠
+                }
+                
+                layer.appendChild(circle);
+            }
+            column.appendChild(layer);
+        }
+        container.appendChild(column);
+    }
+
+    // 선 그리기 함수 (input 요소도 동일하게 위치를 잡아 선을 연결함)
+    function drawGroupLines() {
+        document.querySelectorAll('.color-column').forEach(col => {
+            const svg = col.querySelector('.group-svg');
+            const circles = col.querySelectorAll('.circle');
+            const colRect = col.getBoundingClientRect();
+            svg.innerHTML = '';
+
+            const getPos = (el) => ({
+                x: el.getBoundingClientRect().left - colRect.left + el.offsetWidth / 2,
+                y: el.getBoundingClientRect().top - colRect.top + el.offsetHeight / 2
+            });
+
+            const color = getComputedStyle(circles[0]).backgroundColor;
+
+            // 연결 로직 (3 -> 2 -> 1)
+            connect(getPos(circles[0]), getPos(circles[3]), svg, color);
+            connect(getPos(circles[1]), getPos(circles[3]), svg, color);
+            connect(getPos(circles[1]), getPos(circles[4]), svg, color);
+            connect(getPos(circles[2]), getPos(circles[4]), svg, color);
+            connect(getPos(circles[3]), getPos(circles[5]), svg, color);
+            connect(getPos(circles[4]), getPos(circles[5]), svg, color);
+        });
+    }
+
+    function connect(p1, p2, svg, color) {
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", p1.x); line.setAttribute("y1", p1.y);
+        line.setAttribute("x2", p2.x); line.setAttribute("y2", p2.y);
+        line.setAttribute("stroke", color);
+        line.setAttribute("stroke-width", "1.5");
+        line.setAttribute("opacity", "0.3");
+        svg.appendChild(line);
+    }
+
+    window.addEventListener('load', drawGroupLines);
+    window.addEventListener('resize', drawGroupLines);
+    setTimeout(drawGroupLines, 300);
+</script>
+
+</body>
+</html>

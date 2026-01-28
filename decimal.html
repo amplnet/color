@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Logic Tumbler: Combination</title>
+    <style>
+        :root {
+            --primary: #34495e;
+            --accent: #d35400;
+            --error: #c0392b;
+            --metal-bg: #2c3e50;
+            --dial-bg: #1a1a1a;
+        }
+
+        body {
+            background-color: #121212;
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+            font-family: 'Pretendard', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 2rem; letter-spacing: 4px; color: #ecf0f1; text-transform: uppercase; }
+
+        .bags-container {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 40px;
+            width: 100%;
+            max-width: 800px;
+            justify-content: center;
+        }
+
+        .bag {
+            background: #7f8c8d;
+            padding: 20px;
+            border-radius: 15px 15px 40px 40px;
+            border: 4px solid #34495e;
+            box-shadow: inset 0 -10px 20px rgba(0,0,0,0.3);
+            text-align: center;
+            flex: 1;
+            max-width: 220px;
+        }
+
+        .items-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 10px; justify-items: center; min-height: 100px;
+        }
+
+        .number-token {
+            width: 40px; height: 40px;
+            background: #eee; color: #222;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-weight: 800; cursor: pointer; box-shadow: 0 4px 0 #333;
+        }
+        .number-token.selected { background: var(--accent); color: white; transform: scale(1.1); }
+        .number-token.out { visibility: hidden; }
+
+        .workspace {
+            display: flex; flex-direction: column; gap: 12px;
+            width: 100%; max-width: 420px; margin-bottom: 50px;
+        }
+
+        .calc-row {
+            display: flex; align-items: center; justify-content: space-around;
+            background: rgba(255,255,255,0.05); padding: 12px; border-radius: 10px;
+        }
+
+        .slot {
+            width: 45px; height: 45px;
+            background: rgba(0,0,0,0.4); border: 2px dashed #555;
+            border-radius: 8px; display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem; font-weight: bold; cursor: pointer;
+        }
+        .slot.filled { background: #fff; color: #222; border-style: solid; }
+
+        .fixed-op { font-size: 1.6rem; font-weight: bold; color: var(--accent); width: 30px; text-align: center; }
+        .result-display { width: 70px; text-align: right; font-weight: bold; font-size: 1.1rem; color: #aaa; }
+        .error { color: var(--error); animation: blink 0.5s infinite; }
+
+        /* 자물쇠 디자인 */
+        .escape-lock {
+            background: linear-gradient(145deg, #333, #111);
+            padding: 30px 40px;
+            border-radius: 15px;
+            border: 4px solid #444;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 0 10px #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .lock-label {
+            font-size: 1.1rem; color: #777; letter-spacing: 2px; margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .tumblers {
+            display: flex;
+            gap: 15px;
+            background: #000;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #222;
+        }
+
+        .tumbler-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .arrow {
+            cursor: pointer;
+            width: 0; height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            transition: 0.2s;
+        }
+        .arrow-up { border-bottom: 12px solid #555; }
+        .arrow-up:hover { border-bottom-color: var(--accent); }
+        .arrow-down { border-top: 12px solid #555; }
+        .arrow-down:hover { border-top-color: var(--accent); }
+
+        .digit-display {
+            width: 50px; height: 70px;
+            background: linear-gradient(#222, #444, #222);
+            color: #eee; font-size: 2.5rem; font-weight: 900;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 5px; border: 1px solid #111;
+            box-shadow: inset 0 0 15px #000;
+            user-select: none;
+        }
+
+        .controls { margin-top: 30px; }
+        #reset-btn {
+            background: #222; color: #777; border: 1px solid #444;
+            padding: 8px 20px; border-radius: 4px; cursor: pointer;
+            font-size: 0.8rem; letter-spacing: 1px;
+        }
+        #reset-btn:hover { color: #fff; border-color: #666; }
+
+        @keyframes blink { 50% { opacity: 0; } }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>?ECI?AL</h1>
+    <p style="color: #555; font-size: 0.85rem; margin-top: 5px;">ONL? TEN LE?T</p>
+</div>
+
+<div class="bags-container">
+    <div class="bag">
+        <div class="items-grid" id="bag-L"></div>
+    </div>
+    <div class="bag">
+        <div class="items-grid" id="bag-R"></div>
+    </div>
+</div>
+
+<div class="workspace" id="workspace"></div>
+
+<div class="escape-lock">
+    <div class="lock-label">ANS?ER T??E = + − × ÷ . </div>
+    <div class="tumblers">
+        <div class="tumbler-unit">
+            <div class="arrow arrow-up" onclick="changeDial(0, 1)"></div>
+            <div class="digit-display" id="dial-0">0</div>
+            <div class="arrow arrow-down" onclick="changeDial(0, -1)"></div>
+        </div>
+        <div class="tumbler-unit">
+            <div class="arrow arrow-up" onclick="changeDial(1, 1)"></div>
+            <div class="digit-display" id="dial-1">0</div>
+            <div class="arrow arrow-down" onclick="changeDial(1, -1)"></div>
+        </div>
+        <div class="tumbler-unit">
+            <div class="arrow arrow-up" onclick="changeDial(2, 1)"></div>
+            <div class="digit-display" id="dial-2">0</div>
+            <div class="arrow arrow-down" onclick="changeDial(2, -1)"></div>
+        </div>
+        <div class="tumbler-unit">
+            <div class="arrow arrow-up" onclick="changeDial(3, 1)"></div>
+            <div class="digit-display" id="dial-3">0</div>
+            <div class="arrow arrow-down" onclick="changeDial(3, -1)"></div>
+        </div>
+        <div class="tumbler-unit">
+            <div class="arrow arrow-up" onclick="changeDial(4, 1)"></div>
+            <div class="digit-display" id="dial-4">0</div>
+            <div class="arrow arrow-down" onclick="changeDial(4, -1)"></div>
+        </div>
+    </div>
+</div>
+
+<div class="controls">
+    <button id="reset-btn" onclick="resetGame()">RESET BOARD</button>
+</div>
+
+<script>
+    const leftNumbers = [1, 2, 6, 7, 8];
+    const rightNumbers = [0, 3, 4, 5, 9];
+    const operators = ['+', '-', '*', '/', '.'];
+    
+    // 화면 표시용 특수문자 매핑
+    const opDisplay = {
+        '+': '+',
+        '-': '−',
+        '*': '×',
+        '/': '÷',
+        '.': '.'
+    };
+
+    let rowState = Array.from({length: 5}, (_, i) => ({ L: {val: null, el: null}, OP: operators[i], R: {val: null, el: null} }));
+    let currentSelection = { val: null, type: null, el: null };
+    let dialValues = [0, 0, 0, 0, 0];
+
+    function init() {
+        const bagL = document.getElementById('bag-L');
+        const bagR = document.getElementById('bag-R');
+        bagL.innerHTML = ''; bagR.innerHTML = '';
+        leftNumbers.forEach(n => createToken(n, 'L', bagL));
+        rightNumbers.forEach(n => createToken(n, 'R', bagR));
+
+        const ws = document.getElementById('workspace');
+        ws.innerHTML = '';
+        operators.forEach((op, i) => {
+            const row = document.createElement('div');
+            row.className = 'calc-row';
+            row.innerHTML = `
+                <div class="slot" id="L-${i}" onclick="handleSlotClick(${i}, 'L')"></div>
+                <div class="fixed-op">${opDisplay[op]}</div>
+                <div class="slot" id="R-${i}" onclick="handleSlotClick(${i}, 'R')"></div>
+                <div style="color:#444; font-weight:bold;">=</div>
+                <div class="result-display" id="res-${i}">?</div>
+            `;
+            ws.appendChild(row);
+        });
+
+        for(let i=0; i<5; i++) {
+            dialValues[i] = Math.floor(Math.random() * 10);
+            document.getElementById(`dial-${i}`).innerText = dialValues[i];
+        }
+    }
+
+    function createToken(n, type, container) {
+        const div = document.createElement('div');
+        div.className = 'number-token';
+        div.innerText = n;
+        div.onclick = () => {
+            if (currentSelection.el) currentSelection.el.classList.remove('selected');
+            currentSelection = { val: n, type: type, el: div };
+            div.classList.add('selected');
+        };
+        container.appendChild(div);
+    }
+
+    function handleSlotClick(rowIndex, side) {
+        const slot = document.getElementById(`${side}-${rowIndex}`);
+        const currentState = rowState[rowIndex][side];
+        
+        if (currentState.val !== null) {
+            currentState.el.classList.remove('out');
+            rowState[rowIndex][side] = {val: null, el: null};
+            slot.innerText = '';
+            slot.classList.remove('filled');
+            calculateRow(rowIndex);
+            return;
+        }
+
+        if (currentSelection.val !== null && currentSelection.type === side) {
+            rowState[rowIndex][side] = { val: currentSelection.val, el: currentSelection.el };
+            slot.innerText = currentSelection.val;
+            slot.classList.add('filled');
+            currentSelection.el.classList.add('out');
+            currentSelection.el.classList.remove('selected');
+            currentSelection = { val: null, type: null, el: null };
+            calculateRow(rowIndex);
+        }
+    }
+
+    function calculateRow(idx) {
+        const L = rowState[idx].L.val;
+        const OP = rowState[idx].OP;
+        const R = rowState[idx].R.val;
+        const resEl = document.getElementById(`res-${idx}`);
+        
+        if (L === null || R === null) {
+            resEl.innerText = '?';
+            return;
+        }
+
+        let result;
+        if (OP === '.') result = parseFloat(`${L}.${R}`);
+        else if (OP === '/') result = (R === 0) ? NaN : L / R;
+        else result = eval(`${L} ${OP} ${R}`);
+
+        if (Number.isInteger(result) && result >= 0 && result <= 9) {
+            resEl.innerText = result;
+            resEl.style.color = '#7f8c8d';
+        } else {
+            resEl.innerHTML = '<span class="error">ERROR</span>';
+        }
+    }
+
+    function changeDial(index, direction) {
+        dialValues[index] += direction;
+        if (dialValues[index] > 9) dialValues[index] = 0;
+        if (dialValues[index] < 0) dialValues[index] = 9;
+        document.getElementById(`dial-${index}`).innerText = dialValues[index];
+    }
+
+    function resetGame() {
+        rowState = Array.from({length: 5}, (_, i) => ({ L: {val: null, el: null}, OP: operators[i], R: {val: null, el: null} }));
+        currentSelection = { val: null, type: null, el: null };
+        init();
+    }
+
+    window.onload = init;
+</script>
+
+</body>
+</html>

@@ -4,6 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Circular Puzzle - Stationary Center & Orbital Rotation</title>
+    <script>
+  // 1. 우클릭 차단 (아무 반응 없음)
+  document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+  }, false);
+
+  // 2. 단축키 차단 (F12, Ctrl+Shift+I, Ctrl+U 등)
+  document.addEventListener('keydown', function(e) {
+    const forbiddenKeys = [
+      123, // F12
+      73,  // I (Ctrl+Shift+I)
+      74,  // J (Ctrl+Shift+J)
+      85,  // U (Ctrl+U)
+      83,  // S (Ctrl+S)
+      67   // C (Ctrl+C - 복사 방지까지 원할 경우 추가)
+    ];
+
+    if (
+      forbiddenKeys.includes(e.keyCode) && 
+      (e.ctrlKey || e.shiftKey || e.keyCode === 123)
+    ) {
+      e.preventDefault();
+      e.stopPropagation(); // 이벤트 전파 중단
+      return false;
+    }
+  }, false);
+</script>
     <style>
         :root {
             --bg-color: #f0f2f5;

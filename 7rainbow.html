@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Labyrinth Hotel - Final Rainbow Lock</title>
+    <style>
+        :root {
+            --padlock-red: #c60000;
+            --padlock-dark: #8b0000;
+            --bg-color: #f0f2f5;
+            --header-bg: #ffffff;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            margin: 0;
+            font-family: 'Pretendard', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%;
+            max-width: 500px;
+            background: var(--header-bg);
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            text-align: center;
+            margin-bottom: 10px;
+            z-index: 10;
+        }
+        .header h2 { margin: 0 0 8px 0; font-size: 1.4rem; }
+        .header p { margin: 0; color: #666; }
+
+        /* --- 무지개 섹션 --- */
+        .rainbow-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            height: 280px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            /* 자물쇠와 간격을 위해 마진 제거 */
+            margin-bottom: 0;
+        }
+
+        /* 무지개 띠 공통 스타일 */
+        .band {
+            position: absolute;
+            bottom: -20px;
+            border-radius: 50% 50% 0 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 8px;
+            font-weight: 900;
+            color: white;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+            font-size: 1.1rem;
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.1); /* 입체감 추가 */
+        }
+
+        /* 색상별 설정 */
+        .red    { width: 100%; height: 260px; background-color: #000000; z-index: 1; }
+        .orange { width: 86%;  height: 225px; background-color: #ffffff; color: #333; z-index: 2; }
+        .yellow { width: 72%;  height: 190px; background-color: #ff4d4d; z-index: 3;  text-shadow: none; }
+        .green  { width: 58%;  height: 155px; background-color: #ffeb3b; z-index: 4; }
+        .blue   { width: 44%;  height: 120px; background-color: #4caf50; z-index: 5; }
+        .navy   { width: 30%;  height: 85px;  background-color: #ff9800; z-index: 6;}
+        .purple { width: 16%;  height: 50px;  background-color: #2196f3; z-index: 7;}
+
+        /* [수정] 화살표: 중앙에서 위 -> 아래로 이동 */
+        .rainbow-arrow {
+            position: absolute;
+            /* 초기 위치를 빨간색 밴드 근처로 설정 */
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%); /* 정중앙 정렬 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 15;
+            /* 위에서 아래로 내리는 애니메이션 적용 */
+            animation: pointDownInside 2.5s infinite ease-in-out;
+        }
+
+        .arrow-shaft { width: 6px; height: 40px; background-color: #222; border-radius: 3px; }
+        .arrow-head { width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent; border-top: 20px solid #222; }
+
+        /* [수정] 위에서 아래로 흐르는 애니메이션 키프레임 */
+        @keyframes pointDownInside {
+            0% { top: 30px; opacity: 0; } /* 빨강 근처에서 시작 */
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { top: 180px; opacity: 0; } /* 보라 근처까지 내려감 */
+        }
+
+        /* [수정] 자물쇠 래퍼: 아래로 간격 추가 */
+        .padlock-wrapper {
+            position: relative;
+            z-index: 20;
+            /* 무지개와 겹치지 않도록 상단 마진 추가 */
+            margin-top: 50px;
+        }
+
+        /* 자물쇠 본체 (이전과 동일) */
+        .padlock-container {
+            position: relative; width: 260px; height: 300px;
+            background: linear-gradient(145deg, var(--padlock-red), var(--padlock-dark));
+            border-radius: 60px 60px 100px 100px;
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+            touch-action: none;
+        }
+        .padlock-container::before { content: ''; position: absolute; top: -50px; width: 130px; height: 100px; border: 22px solid #bdc3c7; border-bottom: none; border-radius: 65px 65px 0 0; z-index: -1; }
+        .joystick-base { width: 180px; height: 180px; background: #a50000; border-radius: 50%; position: relative; display: flex; justify-content: center; align-items: center; box-shadow: inset 0 5px 15px rgba(0,0,0,0.4); }
+        .arrow-icon { position: absolute; width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; opacity: 0.6; }
+        .arrow-icon.up { border-bottom: 15px solid black; top: 12px; }
+        .arrow-icon.down { border-top: 15px solid black; bottom: 12px; }
+        .arrow-icon.left { border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-right: 15px solid black; left: 12px; border-left: 0; }
+        .arrow-icon.right { border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-left: 15px solid black; right: 12px; border-right: 0; }
+        .joystick-button { width: 100px; height: 100px; background: radial-gradient(circle at 30% 30%, #ff4d4d, #800000); border-radius: 50%; cursor: pointer; box-shadow: 0 8px 15px rgba(0,0,0,0.5); z-index: 10; transition: transform 0.1s; }
+        
+        .input-section { width: 100%; max-width: 450px; margin-top: 25px; display: flex; flex-direction: column; gap: 10px; }
+        .display-box { background: #fff; padding: 15px; border-radius: 10px; border: 2px solid #ddd; min-height: 40px; font-size: 1.4rem; letter-spacing: 5px; display: flex; justify-content: center; align-items: center; }
+        .button-group { display: flex; gap: 8px; }
+        button { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .btn-copy { background: #3498db; color: white; }
+        .btn-clear { background: #95a5a6; color: white; }
+        .active-arrow { opacity: 1 !important; transform: scale(1.2); }
+
+        /* 모바일 대응 */
+        @media (max-width: 600px) {
+            .padlock-wrapper { margin-top: 30px; } /* 모바일에서는 간격 약간 줄임 */
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h2>일곱빛깔 무지개</h2>
+    <p>정답은 방향 자물쇠 혹은 '상하좌우'로 입력 가능합니다.</p>
+</div>
+
+<div class="rainbow-container">
+    <div class="rainbow-arrow">
+        <div class="arrow-shaft"></div>
+        <div class="arrow-head"></div>
+    </div>
+
+    <div class="band red">검정</div>
+    <div class="band orange">순수</div>
+    <div class="band yellow">빨강</div>
+    <div class="band green">노랑</div>
+    <div class="band blue">초록</div>
+    <div class="band navy">주황</div>
+    <div class="band purple">파랑</div>
+</div>
+</br></br>
+<div class="padlock-wrapper">
+    <div class="padlock-container" id="padlock">
+        <div class="joystick-base">
+            <div class="arrow-icon up" id="arrow-up"></div>
+            <div class="arrow-icon down" id="arrow-down"></div>
+            <div class="arrow-icon left" id="arrow-left"></div>
+            <div class="arrow-icon right" id="arrow-right"></div>
+            <div class="joystick-button" id="knob"></div>
+        </div>
+    </div>
+</div>
+
+<div class="input-section">
+    <div class="display-box" id="sequence-display"></div>
+    <div class="button-group">
+        <button class="btn-copy" onclick="copyToClipboard()">클립보드로 복사</button>
+        <button class="btn-clear" onclick="clearSequence()">초기화</button>
+    </div>
+</div>
+
+<script>
+    // 자물쇠 스크립트 (동일함)
+    const knob = document.getElementById('knob');
+    const display = document.getElementById('sequence-display');
+    let sequence = [];
+    let isDragging = false;
+    let startX, startY;
+    const threshold = 25;
+
+    function addDirection(dir) {
+        const arrows = { 'up': '↑', 'down': '↓', 'left': '←', 'right': '→' };
+        sequence.push(arrows[dir]);
+        display.innerText = sequence.join('');
+        const arrowEl = document.getElementById(`arrow-${dir}`);
+        arrowEl.classList.add('active-arrow');
+        setTimeout(() => arrowEl.classList.remove('active-arrow'), 200);
+    }
+
+    const startAction = (e) => { isDragging = true; startX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX; startY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY; };
+    const moveAction = (e) => {
+        if (!isDragging) return;
+        const currentX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        const currentY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+        const diffX = currentX - startX; const diffY = currentY - startY;
+        const moveX = Math.max(-15, Math.min(15, diffX)); const moveY = Math.max(-15, Math.min(15, diffY));
+        knob.style.transform = `translate(${moveX}px, ${moveY}px)`;
+        if (Math.abs(diffX) > threshold || Math.abs(diffY) > threshold) {
+            let direction = Math.abs(diffX) > Math.abs(diffY) ? (diffX > 0 ? 'right' : 'left') : (diffY > 0 ? 'down' : 'up');
+            addDirection(direction); isDragging = false; knob.style.transform = 'translate(0, 0)';
+        }
+    };
+    const endAction = () => { isDragging = false; knob.style.transform = 'translate(0, 0)'; };
+
+    knob.addEventListener('mousedown', startAction); window.addEventListener('mousemove', moveAction); window.addEventListener('mouseup', endAction);
+    knob.addEventListener('touchstart', startAction, {passive: false}); window.addEventListener('touchmove', moveAction, {passive: false}); window.addEventListener('touchend', endAction);
+    function copyToClipboard() { if (sequence.length === 0) return; navigator.clipboard.writeText(sequence.join('')).then(() => alert("복사되었습니다!")); }
+    function clearSequence() { sequence = []; display.innerText = ""; }
+</script>
+
+</body>
+</html>

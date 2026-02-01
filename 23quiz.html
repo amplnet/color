@@ -2,285 +2,236 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>COLORS: THE ULTIMATE QUIZ</title>
-<script>
-  // 1. 우클릭 차단 (아무 반응 없음)
-  document.addEventListener('contextmenu', function(e) {
-    e.preventDefault();
-  }, false);
-
-  // 2. 단축키 차단 (F12, Ctrl+Shift+I, Ctrl+U 등)
-  document.addEventListener('keydown', function(e) {
-    const forbiddenKeys = [
-      123, // F12
-      73,  // I (Ctrl+Shift+I)
-      74,  // J (Ctrl+Shift+J)
-      85,  // U (Ctrl+U)
-      83,  // S (Ctrl+S)
-      67   // C (Ctrl+C - 복사 방지까지 원할 경우 추가)
-    ];
-
-    if (
-      forbiddenKeys.includes(e.keyCode) && 
-      (e.ctrlKey || e.shiftKey || e.keyCode === 123)
-    ) {
-      e.preventDefault();
-      e.stopPropagation(); // 이벤트 전파 중단
-      return false;
-    }
-  }, false);
-</script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>THE TRIPLE ROOMS: TWENTY-THREE</title>
+    <script>
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            const forbiddenKeys = [123, 73, 74, 85, 83, 67];
+            if (forbiddenKeys.includes(e.keyCode) && (e.ctrlKey || e.shiftKey || e.keyCode === 123)) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
 
         :root {
-            --bg: #FFFFFF;
+            --bg: #F8FAFC;
+            --card-bg: #FFFFFF;
             --text-main: #1E293B;
+            --accent: #3B82F6;
             --border: #E2E8F0;
-            --star-color: #3B82F6;
         }
 
-        /* 전역 스크롤바 제거 (기존 요청 유지) */
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; -ms-overflow-style: none; scrollbar-width: none; }
-        *::-webkit-scrollbar { display: none; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: var(--text-main); font-family: 'Inter', sans-serif; min-height: 100vh; overflow-x: hidden; }
 
-        body {
-            background: var(--bg);
-            color: var(--text-main);
-            font-family: 'Inter', sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 40px 15px;
-            min-height: 100vh;
+        #lobby {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 50px 20px; transition: opacity 0.5s; min-height: 100vh;
+        }
+        .lobby-title { font-size: 2.5rem; font-weight: 900; margin-bottom: 10px; text-transform: uppercase; letter-spacing: -2px; }
+        .lobby-desc { color: #64748B; margin-bottom: 40px; font-size: 0.95rem; text-align: center; }
+        
+        .room-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; max-width: 900px; width: 100%; }
+        .room-card {
+            background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px; padding: 30px 10px;
+            text-align: center; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+        .room-card:hover { transform: translateY(-5px); border-color: var(--accent); box-shadow: 0 15px 20px -5px rgba(0,0,0,0.1); }
+        .room-card h2 { font-size: 1.2rem; margin-bottom: 5px; font-weight: 900; }
+
+        #room-view { display: none; padding: 40px 15px; flex-direction: column; align-items: center; width: 100%; }
+        
+        /* 단일 이미지 컨테이너 최적화 */
+        .image-container { 
+            width: 100%; max-width: 600px; margin-bottom: 30px;
+            background: #fff; border-radius: 20px; border: 1px solid var(--border);
+            overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .image-container img {
+            width: 100%; height: auto; display: block; object-fit: contain;
         }
 
-        .header {
-            text-align: center;
+        /* 23칸 입력 그리드 - 모바일 최적화 */
+        .grid-container { 
+            display: flex; flex-wrap: wrap; justify-content: center; 
+            gap: 8px; max-width: 1000px; margin-bottom: 40px; 
+            padding: 0 5px;
+        }
+        .cell-unit { display: flex; flex-direction: column; align-items: center; width: 42px; }
+        .cell { 
+            width: 100%; height: 50px; border-radius: 10px; border: 2px solid transparent; 
+            display: flex; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            background: white;
+        }
+        .cell input { 
+            width: 100%; height: 100%; border: none; background: transparent; 
+            text-align: center; font-size: 1.2rem; font-weight: 800; outline: none; text-transform: uppercase;
+        }
+        .cell:focus-within { transform: translateY(-2px); border-color: var(--accent); box-shadow: 0 5px 10px rgba(59, 130, 246, 0.2); }
+        .asterisk { margin-top: 4px; height: 18px; color: var(--accent); font-weight: 900; font-size: 1rem; }
+
+        .back-btn {
+            background: var(--text-main); color: white; border: none; padding: 14px 40px;
+            border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;
             margin-bottom: 40px;
         }
 
-        .header h1 {
-            font-size: 2.5rem;
-            font-weight: 900;
-            letter-spacing: -2px;
-            margin: 0;
-            text-transform: uppercase;
-        }
-
-        .header p {
-            color: #64748B;
-            margin-top: 10px;
-            font-size: 0.9rem;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 1000px;
-        }
-
-        .quiz-row {
-            display: flex;
-            align-items: flex-start;
-            margin-bottom: 45px;
-            gap: 20px;
-        }
-
-        .emoji-group {
-            width: 60px;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #F8FAFC;
-            border-radius: 16px;
-            font-size: 2rem;
-            flex-shrink: 0;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-        }
-
-        /* 그리드 최적화: 줄바꿈 허용 */
-        .grid {
-            display: flex;
-            flex-wrap: wrap; /* 모바일에서 자동 줄바꿈의 핵심 */
-            flex: 1;
-            gap: 6px;
-        }
-
-        .cell-unit {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            /* 모바일에서 한 줄에 약 8~10칸이 들어가도록 너비 조절 */
-            width: 45px; 
-        }
-
-        .cell {
-            width: 100%;
-            height: 55px;
-            border-radius: 8px;
-            border: 2px solid transparent;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            transition: all 0.2s ease;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .cell input {
-            width: 100%;
-            height: 100%;
-            border: none;
-            background: transparent;
-            text-align: center;
-            font-size: 1.4rem;
-            font-weight: 800;
-            outline: none;
-            text-transform: uppercase;
-        }
-
-        /* 색상 클래스 */
-        .bg-red { background-color: #FEE2E2; color: #991B1B; }
-        .bg-green { background-color: #DCFCE7; color: #166534; }
-        .bg-blue { background-color: #DBEAFE; color: #1E40AF; }
-        .bg-yellow { background-color: #FEF9C3; color: #854D0E; }
-        .bg-gray { background-color: #F1F5F9; color: #334155; } 
-        .bg-white { background-color: #FFFFFF; border: 2px solid #E2E8F0; color: #1E293B; }
-        .bg-trump-red { background-color: #FFF1F2; border: 2px solid #FFE4E6; color: #BE123C; }
-
-        .cell:focus-within {
-            transform: translateY(-3px);
-            border-color: var(--star-color);
-            box-shadow: 0 8px 12px -3px rgba(59, 130, 246, 0.3);
-        }
-
-        .asterisk {
-            margin-top: 6px;
-            height: 20px;
-            font-size: 1.2rem;
-            color: var(--star-color);
-            font-weight: 900;
-        }
-
+        /* 배경색 클래스 */
+        .bg-white { border: 2px solid #E2E8F0 !important; }
+        .bg-red { background-color: #FEE2E2; }
+        .bg-blue { background-color: #DBEAFE; }
+        .bg-green { background-color: #DCFCE7; }
+        .bg-brown { background-color: #DCFCE7; }
+        .bg-yellow { background-color: #FEF9C3; }
+        .bg-gray { background-color: #F1F5F9; }
+        .bg-purple { background-color: #F3E8FF; }
+        .bg-orange { background-color: #F3822D; }
+        .bg-greengreen { background-color: #81702b; }
+        
         /* 모바일 전용 미디어 쿼리 */
         @media (max-width: 600px) {
-            .header h1 { font-size: 1.8rem; }
-            .quiz-row { 
-                flex-direction: column; /* 이모지를 위로 보냄 */
-                align-items: center;
-                gap: 15px;
-            }
-            .emoji-group { width: 50px; height: 50px; font-size: 1.5rem; }
-            .grid { 
-                justify-content: center; /* 중앙 정렬 */
-                gap: 4px;
-            }
-            .cell-unit { width: 38px; } /* 셀 크기 축소 */
-            .cell { height: 48px; }
-            .cell input { font-size: 1.2rem; }
-            .asterisk { font-size: 1rem; }
+            .lobby-title { font-size: 2rem; }
+            .room-grid { grid-template-columns: 1fr; gap: 10px; }
+            .cell-unit { width: calc(20% - 8px); } /* 모바일에서 5개씩 한 줄에 배치 */
+            .cell { height: 45px; }
+            .cell input { font-size: 1.1rem; }
+            .image-container { border-radius: 12px; }
         }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>TWENTY-THREE</h1>
-        <p>빈 칸에 글자를 입력할 수 있습니다.</p>
+    <div id="lobby">
+        <h1 class="lobby-title">TWENTY-THREE</h1>
+        <p class="lobby-desc">두 개의 답, 세 개의 방, 스물 세개의 가능성</br> 정답 형식 : 방 세 개의 결과를 연달아 입력</p>
+        <div class="room-grid">
+            <div class="room-card" onclick="enterRoom(1)">
+                <h2>ROOM 1</h2>
+                <p>첫 번째 방</p>
+            </div>
+            <div class="room-card" onclick="enterRoom(2)">
+                <h2>ROOM 2</h2>
+                <p>두 번째 방</p>
+            </div>
+            <div class="room-card" onclick="enterRoom(3)">
+                <h2>ROOM 3</h2>
+                <p>세 번째 방</p>
+            </div>
+        </div>
     </div>
 
-    <div class="container">
-        <div class="quiz-row">
-            <div class="emoji-group">🎨</div>
-            <div class="grid" id="grid-color"></div>
-        </div>
+    <div id="room-view">
+        <h1 id="room-title" style="margin-bottom: 25px; font-weight: 900; letter-spacing: -1px; font-size: 1.8rem;">ROOM 1</h1>
+        
+        <div class="image-container" id="single-image-board"></div>
 
-        <div class="quiz-row">
-            <div class="emoji-group">🃏</div>
-            <div class="grid" id="grid-trump"></div>
-        </div>
+        <div class="grid-container" id="input-grid"></div>
 
-        <div class="quiz-row">
-            <div class="emoji-group">🔢</div>
-            <div class="grid" id="grid-number"></div>
-        </div>
+        <button class="back-btn" onclick="exitRoom()">되돌리기</button>
     </div>
 
     <script>
-        const colorConfig = [
-            { len: 3, cls: 'bg-red', star: 2 },
-            { len: 5, cls: 'bg-green', star: 2 },
-            { len: 4, cls: 'bg-blue', star: 1 },
-            { len: 6, cls: 'bg-yellow', star: 1 },
-            { len: 5, cls: 'bg-gray', star: null }
-        ];
+        const ROOM_CONFIG = {
+            1: {
+                title: "ROOM 1　첫 번째 방",
+                image: "https://amplnet.github.io/color/zoo2.png", 
+                cells: [
+                    ['bg-greengreen', true],   ['bg-greengreen', false], ['bg-greengreen', false], ['bg-greengreen', false], ['bg-gray', false],
+                    ['bg-gray', false],  ['bg-gray', false], ['bg-gray', false], ['bg-gray', false], ['bg-gray', false],
+                    ['bg-gray', false], ['bg-white', false], ['bg-white', true], ['bg-white', false], ['bg-white', false],
+                    ['bg-white', false],['bg-orange', true], ['bg-orange', false], ['bg-orange', false], ['bg-orange', false],
+                    ['bg-yellow', false],  ['bg-yellow', true], ['bg-yellow', false]
+                ]
+            },
+            2: {
+                title: "ROOM 2　두 번째 방",
+                image: "https://amplnet.github.io/color/farm.png",
+                cells: [
+                    ['bg-greengreen', false], ['bg-greengreen', false],  ['bg-greengreen', true], ['bg-greengreen', false], ['bg-greengreen', false],
+                    ['bg-greengreen', false], ['bg-greengreen', false],  ['bg-yellow', false], ['bg-yellow', false], ['bg-yellow', false],
+                    ['bg-yellow', true], ['bg-yellow', false],  ['bg-orange', false], ['bg-orange', false], ['bg-orange', true],
+                    ['bg-orange', true], ['bg-orange', false],  ['bg-red', false], ['bg-red', false], ['bg-red', false],
+                    ['bg-red', false], ['bg-red', false],  ['bg-red', true]
+                ]
+            },
+            3: {
+                title: "ROOM 3　세 번째 방",
+                image: "https://amplnet.github.io/color/room2.png",
+                cells: [
+                    ['bg-yellow', false], ['bg-yellow', false], ['bg-yellow', false], ['bg-yellow', true], ['bg-yellow', false],
+                    ['bg-yellow', false], ['bg-red', false], ['bg-red', true], ['bg-red', false], ['bg-red', false],
+                    ['bg-greengreen', false], ['bg-greengreen', false], ['bg-greengreen', false], ['bg-greengreen', false], ['bg-orange', true],
+                    ['bg-orange', false], ['bg-orange', false], ['bg-greengreen', false], ['bg-greengreen', false], ['bg-greengreen', false],
+                    ['bg-greengreen', false], ['bg-greengreen', false], ['bg-greengreen', true]
+                ]
+            }
+        };
 
-        const trumpConfig = [
-            { len: 5, cls: 'bg-white', star: null },
-            { len: 5, cls: 'bg-trump-red', star: 4 },
-            { len: 6, cls: 'bg-white', star: 4 },
-            { len: 7, cls: 'bg-trump-red', star: null }
-        ];
+        const lobby = document.getElementById('lobby');
+        const roomView = document.getElementById('room-view');
 
-        const numberConfig = [
-            { len: 4, cls: 'bg-gray', star: 0 },
-            { len: 3, cls: 'bg-white', star: null },
-            { len: 3, cls: 'bg-gray', star: null },
-            { len: 5, cls: 'bg-white', star: null },
-            { len: 4, cls: 'bg-gray', star: null },
-            { len: 4, cls: 'bg-white', star: null }
-        ];
+        function enterRoom(id) {
+            const config = ROOM_CONFIG[id];
+            document.getElementById('room-title').textContent = config.title;
+            
+            // 이미지 출력 (1개만)
+            const imgBoard = document.getElementById('single-image-board');
+            imgBoard.innerHTML = `<img src="${config.image}" alt="Hint">`;
 
-        function createGrid(gridId, config) {
-            const grid = document.getElementById(gridId);
-            let globalIdx = 0;
+            const grid = document.getElementById('input-grid');
+            grid.innerHTML = '';
+            config.cells.forEach((cellData, idx) => {
+                const [cls, hasStar] = cellData;
+                const unit = document.createElement('div');
+                unit.className = 'cell-unit';
 
-            config.forEach(item => {
-                for (let i = 0; i < item.len; i++) {
-                    const unit = document.createElement('div');
-                    unit.className = 'cell-unit';
+                const cell = document.createElement('div');
+                cell.className = `cell ${cls}`;
 
-                    const cell = document.createElement('div');
-                    cell.className = `cell ${item.cls}`;
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.maxLength = 1;
+                input.dataset.idx = idx;
 
-                    const input = document.createElement('input');
-                    input.type = "text";
-                    input.maxLength = 1;
-                    input.dataset.idx = globalIdx;
+                // 자동 포커스 이동
+                input.addEventListener('input', e => {
+                    if (e.target.value.length === 1) {
+                        const next = grid.querySelector(`input[data-idx="${idx + 1}"]`);
+                        if (next) next.focus();
+                    }
+                });
+                input.addEventListener('keydown', e => {
+                    if (e.key === 'Backspace' && e.target.value === '') {
+                        const prev = grid.querySelector(`input[data-idx="${idx - 1}"]`);
+                        if (prev) prev.focus();
+                    }
+                });
 
-                    // 포커스 자동 이동 및 백스페이스 처리
-                    input.addEventListener('input', (e) => {
-                        if (e.target.value.length === 1) {
-                            const next = grid.querySelector(`input[data-idx="${parseInt(e.target.dataset.idx) + 1}"]`);
-                            if (next) next.focus();
-                        }
-                    });
+                cell.appendChild(input);
+                unit.appendChild(cell);
 
-                    input.addEventListener('keydown', (e) => {
-                        if (e.key === 'Backspace' && e.target.value === '') {
-                            const prev = grid.querySelector(`input[data-idx="${parseInt(e.target.dataset.idx) - 1}"]`);
-                            if (prev) prev.focus();
-                        }
-                    });
+                const star = document.createElement('div');
+                star.className = 'asterisk';
+                if (hasStar) star.textContent = '★';
+                unit.appendChild(star);
 
-                    cell.appendChild(input);
-                    unit.appendChild(cell);
-
-                    const star = document.createElement('div');
-                    star.className = 'asterisk';
-                    if (i === item.star) star.textContent = '*';
-                    unit.appendChild(star);
-
-                    grid.appendChild(unit);
-                    globalIdx++;
-                }
+                grid.appendChild(unit);
             });
+
+            lobby.style.display = 'none';
+            roomView.style.display = 'flex';
+            window.scrollTo(0, 0);
         }
 
-        createGrid('grid-color', colorConfig);
-        createGrid('grid-trump', trumpConfig);
-        createGrid('grid-number', numberConfig);
+        function exitRoom() {
+            roomView.style.display = 'none';
+            lobby.style.display = 'flex';
+        }
     </script>
 </body>
 </html>

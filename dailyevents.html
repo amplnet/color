@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Events - Time Adjuster</title>
+    <title>Daily Events - Timezone Switch</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Space+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -13,12 +13,13 @@
             --text-muted: #6b7280;
             --board-bg: #ffffff;
             --border-light: #e5e7eb;
+            /* 노드 색상 팔레트 */
+            --ev-black: #343a40;
             --ev-red: #ff8787;
             --ev-blue: #74c0fc;
-            --ev-green: #63e6be;
             --ev-orange: #ffd43b;
             --ev-purple: #da77f2;
-            --ev-gray: #dee2e6;
+            --ev-green: #63e6be;
         }
 
         body {
@@ -27,33 +28,31 @@
             font-family: 'Inter', sans-serif;
             margin: 0; padding: 0;
             display: flex; flex-direction: column; align-items: center;
-            min-height: 100vh;
-            justify-content: center;
+            min-height: 100vh; justify-content: center;
         }
 
         .header { text-align: center; margin-bottom: 20px; }
         .header h1 { font-size: 2.2rem; letter-spacing: -1px; margin: 0; }
 
+        .clock-container {
+            display: flex; align-items: baseline; justify-content: center;
+            gap: 10px; margin: 10px 0;
+        }
+
         .clock-display {
             font-family: 'Space Mono', monospace;
-            font-size: 1.8rem;
-            color: var(--accent-color);
-            margin: 10px 0;
-            font-weight: bold;
-            background: #fff;
-            padding: 5px 20px;
-            border-radius: 12px;
+            font-size: 1.8rem; color: var(--accent-color);
+            font-weight: bold; background: #fff;
+            padding: 5px 20px; border-radius: 12px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.03);
         }
 
+        .tz-label { font-family: 'Space Mono', monospace; font-weight: bold; color: var(--text-muted); }
+
         .board-container {
-            position: relative;
-            width: 90vw;
-            max-width: 580px;
-            aspect-ratio: 1 / 1;
-            background: var(--board-bg);
-            border-radius: 50%;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.04);
+            position: relative; width: 85vw; max-width: 500px;
+            aspect-ratio: 1 / 1; background: var(--board-bg);
+            border-radius: 50%; box-shadow: 0 10px 40px rgba(0,0,0,0.04);
             display: flex; justify-content: center; align-items: center;
             border: 1px solid var(--border-light);
         }
@@ -61,55 +60,36 @@
         svg { width: 100%; height: 100%; overflow: visible; }
         #rotatable-group { transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1); transform-origin: center; }
 
-        .node { cursor: pointer; stroke: #fff; stroke-width: 3; transition: opacity 0.2s; }
-        .node:hover { opacity: 0.8; }
+        .node { stroke: #fff; stroke-width: 3; transition: fill 0.4s; }
+        .star-label { pointer-events: none; fill: white; font-size: 22px; font-weight: bold; text-anchor: middle; dominant-baseline: middle; }
 
-        .star-label {
-            pointer-events: none;
-            fill: white;
-            font-size: 22px;
-            font-weight: bold;
-            text-anchor: middle;
-            dominant-baseline: middle;
-        }
-
-        .controls { margin-top: 30px; text-align: center; }
-        
-        .btn-group {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-        }
-
-        .rotate-btn {
+        .controls { margin-top: 25px; text-align: center; }
+        .main-btn {
             background: white; border: 1px solid var(--border-light);
-            padding: 12px 20px; border-radius: 12px;
-            font-weight: 600; color: var(--text-main);
+            padding: 12px 28px; border-radius: 12px;
+            font-weight: 700; color: var(--text-main);
             cursor: pointer; transition: all 0.2s;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
-        .rotate-btn:hover { background: #f9fafb; border-color: var(--accent-color); transform: translateY(-1px); }
-        .rotate-btn:active { transform: translateY(0); }
-        
-        .status-msg { margin-top: 15px; font-size: 0.85rem; color: var(--text-muted); font-family: 'Space Mono', monospace; }
+        .main-btn:hover { border-color: var(--accent-color); background: #f9fafb; transform: translateY(-1px); }
+
+        .status-msg { margin-top: 20px; font-size: 0.95rem; color: var(--text-muted); font-family: 'Space Mono', monospace; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1>일상다반사</h1>
-        <div id="digital-clock" class="clock-display">00:00:00</div>
+        <h1 id="site-title">일상다반사</h1>
+        <div class="clock-container">
+            <div id="digital-clock" class="clock-display">00:00:00</div>
+            <span id="tz-info" class="tz-label">UTC+9</span>
+        </div>
     </div>
 
     <div class="board-container">
         <svg viewBox="0 0 800 800">
             <circle cx="400" cy="400" r="320" fill="none" stroke="#f3f4f6" stroke-width="1" />
-            
             <line x1="400" y1="400" x2="400" y2="80" stroke="var(--accent-color)" stroke-width="2" stroke-dasharray="5,5" opacity="0.7" />
-
             <g id="rotatable-group">
                 <g id="nodes-layer"></g>
             </g>
@@ -117,63 +97,97 @@
     </div>
 
     <div class="controls">
-        <div class="btn-group">
-            <button class="rotate-btn" onclick="adjustTime(1)">🕚 1시간 뒤로</button>
-            <button class="rotate-btn" onclick="adjustTime(-1)">🕙 1시간 앞으로</button>
-        </div>
-        <div id="delay-info" class="status-msg">정답 형식 : 한글</div>
+        <button id="toggle-tz-btn" class="main-btn" onclick="toggleTimezone()">🌐 시간대 바꾸기</button>
+        <div id="status-desc" class="status-msg">정답 형식 : 한글</div>
     </div>
 
     <script>
+        /* ==========================================
+           배치 설정 구역 (이 부분을 수정하세요)
+        ========================================== */
+
+        const CONFIG = {
+            kst: { // UTC+9 (기본 상태)
+                title: "일상다반사",
+                desc: "정답 형식 : 한글",
+                nodes: [
+                    { id: 0, color: 'var(--ev-black)', hasStar: false }, { id: 1, color: 'var(--ev-black)', hasStar: false },
+                    { id: 2, color: 'var(--ev-black)', hasStar: false }, { id: 3, color: 'var(--ev-black)', hasStar: false },
+                    { id: 4, color: 'var(--ev-black)', hasStar: false }, { id: 5, color: 'var(--ev-black)', hasStar: false },
+                    { id: 6, color: 'var(--ev-red)',   hasStar: true },  { id: 7, color: 'var(--ev-red)',   hasStar: false },
+                    { id: 8, color: 'var(--ev-red)',   hasStar: false }, { id: 9, color: 'var(--ev-red)',   hasStar: true },
+                    { id: 10, color: 'var(--ev-red)',  hasStar: false }, { id: 11, color: 'var(--ev-orange)', hasStar: true },
+                    { id: 12, color: 'var(--ev-orange)', hasStar: false }, { id: 13, color: 'var(--ev-orange)', hasStar: false },
+                    { id: 14, color: 'var(--ev-orange)', hasStar: false }, { id: 15, color: 'var(--ev-orange)', hasStar: true },
+                    { id: 16, color: 'var(--ev-orange)', hasStar: false }, { id: 17, color: 'var(--ev-blue)',   hasStar: true },
+                    { id: 18, color: 'var(--ev-blue)',   hasStar: true },  { id: 19, color: 'var(--ev-blue)',   hasStar: false },
+                    { id: 20, color: 'var(--ev-blue)',   hasStar: false }, { id: 21, color: 'var(--ev-blue)',   hasStar: true },
+                    { id: 22, color: 'var(--ev-black)',  hasStar: false }, { id: 23, color: 'var(--ev-black)',  hasStar: false }
+                ]
+            },
+            utc0: { // UTC+0 (바뀐 상태)
+                title: "Daily Events",
+                desc: "Answer Type : English",
+                nodes: [
+                    // 여기에 UTC+0일 때의 색상과 별 위치를 배치하세요 (24개)
+                   
+                    { id: 0, color: 'var(--ev-black)', hasStar: false }, 
+                    { id: 1, color: 'var(--ev-black)', hasStar: false },
+                    { id: 2, color: 'var(--ev-black)', hasStar: false }, 
+                    { id: 3, color: 'var(--ev-red)', hasStar: false },
+                    { id: 4, color: 'var(--ev-red)', hasStar: false }, 
+                    { id: 5, color: 'var(--ev-red)', hasStar: false },
+                    { id: 6, color: 'var(--ev-red)',   hasStar: false },  
+                    { id: 7, color: 'var(--ev-red)',   hasStar: false },
+                    { id: 8, color: 'var(--ev-red)',   hasStar: true }, 
+                    { id: 9, color: 'var(--ev-red)',   hasStar: true },
+                    { id: 10, color: 'var(--ev-red)',  hasStar: false },
+                    { id: 11, color: 'var(--ev-red)', hasStar: true },
+                    { id: 12, color: 'var(--ev-orange)', hasStar: false }, 
+                    { id: 13, color: 'var(--ev-orange)', hasStar: false },
+                    { id: 14, color: 'var(--ev-orange)', hasStar: false }, 
+                    { id: 15, color: 'var(--ev-orange)', hasStar: false },
+                    { id: 16, color: 'var(--ev-orange)', hasStar: true },
+                    { id: 17, color: 'var(--ev-blue)',   hasStar: false },
+                    { id: 18, color: 'var(--ev-blue)',   hasStar: false }, 
+                    { id: 19, color: 'var(--ev-blue)',   hasStar: false },
+                    { id: 20, color: 'var(--ev-blue)',   hasStar: false },
+                    { id: 21, color: 'var(--ev-blue)',   hasStar: true },
+                    { id: 22, color: 'var(--ev-blue)',  hasStar: true },
+                    { id: 23, color: 'var(--ev-black)',  hasStar: false }
+                ]
+            }
+        };
+
+        /* ==========================================
+           로직 구역
+        ========================================== */
+
         const TOTAL_NODES = 24;
         const RADIUS = 320;
         const CENTER = 400;
         const NODE_RADIUS = 30;
         
-        let manualDelayHours = 0;
-
-        const nodeData = [
-            { id: 0,  color: 'var(--ev-black)',    hasStar: false },
-            { id: 1,  color: 'var(--ev-black)',   hasStar: false },
-            { id: 2,  color: 'var(--ev-black)',  hasStar: false },
-            { id: 3,  color: 'var(--ev-black)', hasStar: false },
-            { id: 4,  color: 'var(--ev-black)', hasStar: false },
-            { id: 5,  color: 'var(--ev-black)',    hasStar: false },
-            { id: 6,  color: 'var(--ev-red)',   hasStar: true },
-            { id: 7,  color: 'var(--ev-red)',  hasStar: false },
-            { id: 8,  color: 'var(--ev-red)', hasStar: false },
-            { id: 9,  color: 'var(--ev-red)', hasStar: true },
-            { id: 10, color: 'var(--ev-red)',    hasStar: false },
-            { id: 11, color: 'var(--ev-orange)',   hasStar: true },
-            { id: 12, color: 'var(--ev-orange)',  hasStar: false },
-            { id: 13, color: 'var(--ev-orange)', hasStar: false },
-            { id: 14, color: 'var(--ev-orange)', hasStar: false },
-            { id: 15, color: 'var(--ev-orange)',    hasStar: true },
-            { id: 16, color: 'var(--ev-orange)',   hasStar: false },
-            { id: 17, color: 'var(--ev-blue)',  hasStar: true },
-            { id: 18, color: 'var(--ev-blue)', hasStar: true },
-            { id: 19, color: 'var(--ev-blue)', hasStar: false },
-            { id: 20, color: 'var(--ev-blue)',    hasStar: false },
-            { id: 21, color: 'var(--ev-blue)',   hasStar: true },
-            { id: 22, color: 'var(--ev-black)',  hasStar: false },
-            { id: 23, color: 'var(--ev-black)', hasStar: false }
-        ];
-
+        let isUTC0 = false;
 
         window.onload = () => {
-            initBoard();
+            applyConfig(CONFIG.kst);
             updateClockAndRotation();
             setInterval(updateClockAndRotation, 1000);
         };
 
-        function initBoard() {
+        function renderBoard(dataArray) {
             const nodesLayer = document.getElementById('nodes-layer');
-            nodeData.forEach(data => {
-                const coord = getCoord(data.id);
-                const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            nodesLayer.innerHTML = '';
+            
+            dataArray.forEach(data => {
+                const angle = (data.id * (360 / TOTAL_NODES) - 90) * (Math.PI / 180);
+                const x = CENTER + RADIUS * Math.cos(angle);
+                const y = CENTER + RADIUS * Math.sin(angle);
 
+                const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
                 const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                circle.setAttribute("cx", coord.x); circle.setAttribute("cy", coord.y);
+                circle.setAttribute("cx", x); circle.setAttribute("cy", y);
                 circle.setAttribute("r", NODE_RADIUS);
                 circle.setAttribute("class", "node");
                 circle.style.fill = data.color;
@@ -181,7 +195,7 @@
 
                 if (data.hasStar) {
                     const star = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                    star.setAttribute("x", coord.x); star.setAttribute("y", coord.y + 7);
+                    star.setAttribute("x", x); star.setAttribute("y", y + 7);
                     star.setAttribute("class", "star-label");
                     star.textContent = "★";
                     g.appendChild(star);
@@ -190,19 +204,14 @@
             });
         }
 
-        function getCoord(idx) {
-            const angle = (idx * (360 / TOTAL_NODES) - 90) * (Math.PI / 180);
-            return { x: CENTER + RADIUS * Math.cos(angle), y: CENTER + RADIUS * Math.sin(angle) };
-        }
-
         function updateClockAndRotation() {
             const now = new Date();
-            const adjustedTimeMs = now.getTime() - (manualDelayHours * 3600000);
-            const displayDate = new Date(adjustedTimeMs);
-
-            const h = displayDate.getHours();
-            const m = displayDate.getMinutes();
-            const s = displayDate.getSeconds();
+            let h, m, s;
+            if (isUTC0) {
+                h = now.getUTCHours(); m = now.getUTCMinutes(); s = now.getUTCSeconds();
+            } else {
+                h = now.getHours(); m = now.getMinutes(); s = now.getSeconds();
+            }
 
             document.getElementById('digital-clock').textContent = 
                 `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
@@ -211,11 +220,27 @@
             document.getElementById('rotatable-group').style.transform = `rotate(${-timeAngle}deg)`;
         }
 
-        function adjustTime(amount) {
-            manualDelayHours += amount;
-            const direction = manualDelayHours >= 0 ? "-" : "+";
-            document.getElementById('delay-info').textContent = `변화한 시간 : ${direction} ${Math.abs(manualDelayHours)}시간`;
+        function toggleTimezone() {
+            isUTC0 = !isUTC0;
+            const btn = document.getElementById('toggle-tz-btn');
+            const tzInfo = document.getElementById('tz-info');
+
+            if (isUTC0) {
+                btn.textContent = "🔄 Return";
+                tzInfo.textContent = "UTC+0";
+                applyConfig(CONFIG.utc0);
+            } else {
+                btn.textContent = "🌐 시간대 바꾸기";
+                tzInfo.textContent = "UTC+9";
+                applyConfig(CONFIG.kst);
+            }
             updateClockAndRotation();
+        }
+
+        function applyConfig(cfg) {
+            document.getElementById('site-title').textContent = cfg.title;
+            document.getElementById('status-desc').textContent = cfg.desc;
+            renderBoard(cfg.nodes);
         }
     </script>
 </body>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Forgotten Letters: Visual Comparison</title>
+    <style>
+        :root {
+            /* Colors 컨셉 테마 색상 */
+            --world-bg: #2c3e50; /* 깊은 남색 */
+            --world-accent: #3498db; /* 밝은 파랑 (구분선용) */
+            --village-bg: #d35400; /* 따뜻한 오렌지색 */
+            --village-accent: #f39c12; /* 밝은 오렌지 (구분선용) */
+            --text-color: #ecf0f1;
+        }
+
+        body, html {
+            margin: 0; padding: 0; height: 100%;
+            font-family: 'Pretendard', sans-serif;
+            background: #1a1a1a;
+            color: var(--text-color);
+            display: flex; flex-direction: column;
+        }
+
+        /* 메인 컨테이너: 좌우 2분할 */
+        main {
+            flex: 1;
+            display: flex;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* 공통 기둥 스타일 */
+        .column {
+            flex: 1; /* 50:50 비율 */
+            display: flex;
+            flex-direction: column;
+            border-right: 4px solid rgba(0,0,0,0.2);
+        }
+
+        /* 왼쪽: 세상 (5글자) */
+        .world-col { background-color: var(--world-bg); }
+        /* 오른쪽: 마을 (4글자) */
+        .village-col { background-color: var(--village-bg); border-right: none; }
+
+        /* 헤더 스타일 (수정됨) */
+        h2 {
+            text-align: center;
+            padding: 20px 0 15px; margin: 0;
+            font-size: 1.4rem; letter-spacing: 3px;
+            text-transform: uppercase;
+            background: rgba(0,0,0,0.1);
+            font-weight: 900;
+            position: relative; /* 구분선 위치 기준 */
+        }
+
+        /* 헤더 하단 구분선 추가 */
+        h2::after {
+            content: '';
+            display: block;
+            width: 60px; /* 선 길이 */
+            height: 5px; /* 선 두께 */
+            margin: 15px auto 0; /* 중앙 정렬 및 여백 */
+            border-radius: 2px;
+        }
+
+        /* 각 컬럼별 구분선 색상 지정 */
+        .world-col h2::after { background-color: var(--world-accent); box-shadow: 0 0 10px var(--world-accent); }
+        .village-col h2::after { background-color: var(--village-accent); box-shadow: 0 0 10px var(--village-accent); }
+
+
+        /* 이미지 스택 컨테이너 */
+        .image-stack {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 개별 이미지 박스 */
+        .img-box {
+            flex: 1; /* 5등분 */
+            background-size: cover;
+            background-position: center;
+            filter: grayscale(40%) brightness(0.7) contrast(1.1); /* 분위기 통일을 위한 필터 */
+            transition: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            border-bottom: 1px solid rgba(255,255,255,0.15);
+            position: relative;
+        }
+
+        /* 이미지 위에 텍스트 오버레이 (옵션: 필요시 주석 해제) */
+        /*
+        .img-box::before {
+            content: attr(data-word);
+            position: absolute;
+            bottom: 10px; left: 20px;
+            font-size: 1.2rem; font-weight: bold;
+            opacity: 0.5; transition: 0.3s;
+        }
+        */
+
+        /* 마우스 오버 시 강조 효과 */
+        .row-hover .img-box, .img-box:hover {
+            filter: grayscale(0%) brightness(1.1) contrast(1);
+            z-index: 10;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transform: scale(1.02); /* 살짝 커지는 효과 */
+            border-bottom-color: transparent;
+        }
+        /* .row-hover .img-box::before, .img-box:hover::before { opacity: 1; } */
+
+
+        /* 푸터 스타일 */
+        footer {
+            text-align: center;
+            padding: 25px;
+            background: #111;
+            font-weight: 700; letter-spacing: 1.5px;
+            font-size: 0.9rem; color: #888;
+            border-top: 3px solid #222;
+        }
+
+        /* 반응형: 모바일 */
+        @media (max-width: 768px) {
+            main { flex-direction: column; height: auto; }
+            .column { height: auto; border-right: none; }
+            .image-stack { height: 80vh; } /* 모바일에서 이미지 영역 높이 설정 */
+            h2 { font-size: 1.2rem; padding: 15px 0; }
+            h2::after { width: 40px; height: 4px; margin-top: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<main>
+    <section class="column world-col">
+        <h2>??e ?orld</h2>
+        <div class="image-stack">
+            <div class="img-box row-1" data-word="" style="background-image: url('https://amplnet.github.io/color/13/11-1.png');"></div>
+            <div class="img-box row-2" data-word="" style="background-image: url('https://amplnet.github.io/color/13/11-2.png');"></div>
+                        <div class="img-box row-3" data-word="" style="background-image: url('https://amplnet.github.io/color/13/11-3.png');"></div>
+                                    <div class="img-box row-4" data-word="" style="background-image: url('https://amplnet.github.io/color/13/11-4.png');"></div>
+                                                <div class="img-box row-5" data-word="" style="background-image: url('https://amplnet.github.io/color/13/11-5.png');"></div>
+        </div>
+    </section>
+
+    <section class="column village-col">
+        <h2>??e ?illage</h2>
+        <div class="image-stack">
+                                                <div class="img-box row-1" data-word="" style="background-image: url('https://amplnet.github.io/color/13/2-1.png');"></div>
+                                                <div class="img-box row-2" data-word="" style="background-image: url('https://amplnet.github.io/color/13/2-2.png');"></div>
+                                                                                                <div class="img-box row-3" data-word="" style="background-image: url('https://amplnet.github.io/color/13/2-3.png');"></div>
+                                                                                                                                                <div class="img-box row-4" data-word="" style="background-image: url('https://amplnet.github.io/color/13/2-4.png');"></div>
+                                                                                                                                                                                                <div class="img-box row-5" data-word="" style="background-image: url('https://amplnet.github.io/color/13/2-5.png');"></div>
+        </div>
+    </section>
+</main>
+
+<footer>
+    ?IND ??E ?ORGOTTEN LETTERS. C?ANGE TO ?N?ORGOTTEN LETTERS.
+</footer>
+
+<script>
+    const rows = 5;
+    for (let i = 1; i <= rows; i++) {
+        const leftImg = document.querySelector(`.world-col .row-${i}`);
+        const rightImg = document.querySelector(`.village-col .row-${i}`);
+        const addHover = () => { leftImg.classList.add('row-hover'); rightImg.classList.add('row-hover'); };
+        const removeHover = () => { leftImg.classList.remove('row-hover'); rightImg.classList.remove('row-hover'); };
+
+        leftImg.addEventListener('mouseenter', addHover);
+        leftImg.addEventListener('mouseleave', removeHover);
+        rightImg.addEventListener('mouseenter', addHover);
+        rightImg.addEventListener('mouseleave', removeHover);
+    }
+</script>
+
+</body>
+</html>

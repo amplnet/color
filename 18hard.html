@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pastel Memory Lock : 6-Digits</title>
+    <script>
+        // 우클릭 및 단축키 차단 로직 유지
+        document.addEventListener('contextmenu', e => e.preventDefault(), false);
+        document.addEventListener('keydown', e => {
+            const forbiddenKeys = [123, 73, 74, 85, 83, 67];
+            if (forbiddenKeys.includes(e.keyCode) && (e.ctrlKey || e.shiftKey || e.keyCode === 123)) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+        }, false);
+    </script>
+    <style>
+        :root {
+            --bg: #fdf2f8;
+            --card: #ffffff;
+            --primary: #f472b6;
+            --accent: #facc15;
+            --text: #475569;
+            --muted: #94a3b8;
+            --border: #e2e8f0;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            
+            /* 파스텔 색상 확장 */
+            --pastel-pink: #fbcfe8;
+            --pastel-yellow: #fef08a;
+            --pastel-blue: #bae6fd;
+            --pastel-green: #bbf7d0;
+            --pastel-purple: #e9d5ff;
+            --pastel-orange: #fed7aa;
+            
+            --metal-gradient: linear-gradient(145deg, #e2e8f0, #cbd5e1);
+            --shackle-gradient: linear-gradient(to bottom, #94a3b8, #cbd5e1, #94a3b8);
+        }
+
+        body {
+            background-color: var(--bg); color: var(--text); font-family: 'Pretendard', sans-serif;
+            display: flex; flex-direction: column; align-items: center; padding: 2rem; margin: 0;
+            min-height: 100vh;
+        }
+
+        .manual-section {
+            width: 100%; max-width: 500px; background: var(--card); border-radius: 20px;
+            padding: 20px; margin-bottom: 40px; box-shadow: var(--shadow);
+            border: 2px solid var(--primary); font-size: 0.95rem; line-height: 1.6; text-align: center;
+        }
+
+        /* 자물쇠 컨테이너 폭 확장 (6개 다이얼 수용) */
+        .lock-container { position: relative; width: 620px; padding-top: 100px; }
+        
+        .lock-shackle {
+            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+            width: 400px; height: 160px; 
+            border: 22px solid transparent;
+            border-image: var(--shackle-gradient) 1;
+            border-bottom: none; border-radius: 120px 120px 0 0; z-index: 1;
+            transition: 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .lock-container.unlocked .lock-shackle { 
+            transform: translate(-50%, -60px) rotate(-10deg); 
+            border-image: linear-gradient(to bottom, var(--accent), #fde68a, var(--accent)) 1;
+        }
+
+        .lock-body {
+            position: relative; z-index: 2; background: var(--metal-gradient);
+            padding: 35px 20px; border-radius: 28px; border: 4px solid #cbd5e1;
+            display: flex; justify-content: center; gap: 10px; align-items: center;
+            box-shadow: 0 25px 30px -10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 다이얼 유닛 공통 및 색상 */
+        .dial-unit { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 10px; border-radius: 16px; }
+        .dial-1 { background-color: var(--pastel-pink); }
+        .dial-2 { background-color: var(--pastel-yellow); }
+        .dial-3 { background-color: var(--pastel-blue); }
+        .dial-4 { background-color: var(--pastel-green); }
+        .dial-5 { background-color: var(--pastel-purple); }
+        .dial-6 { background-color: var(--pastel-orange); }
+
+        .arrow-btn {
+            width: 45px; height: 35px; background: rgba(255,255,255,0.7); border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 1.3rem; transition: 0.2s;
+        }
+        .arrow-btn:hover { background: #fff; transform: scale(1.1); }
+
+        .wheel {
+            width: 75px; height: 100px; background: var(--card); border: 4px solid #fff;
+            border-radius: 16px; position: relative; overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: inset 0 5px 10px rgba(0,0,0,0.1);
+        }
+
+        .wheel-content { font-size: 2.2rem; font-weight: 900; transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+        #status-light { margin-top: 50px; font-weight: 900; color: var(--muted); font-size: 1.5rem; text-transform: uppercase; }
+        #status-light.unlocked { color: var(--primary); animation: pulse 1s infinite alternate; }
+        @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.1); } }
+
+        .reset-btn {
+            margin-top: 30px; padding: 15px 50px; background: var(--card); color: var(--primary); 
+            border: 2px solid var(--primary); border-radius: 16px; cursor: pointer; font-weight: 700; transition: 0.2s;
+        }
+        .reset-btn:hover { background: var(--primary); color: #fff; }
+    </style>
+</head>
+<body>
+
+    <div class="manual-section">
+        <h3>🔐 18 🔐</h3>
+        <p>FIND THE KEYWORD</p>
+    </div>
+
+    <div class="lock-container" id="lock-container">
+        <div class="lock-shackle"></div>
+        <div class="lock-body">
+            <div class="dial-unit dial-1">
+                <button class="arrow-btn" onclick="rotate(0, -1)">▲</button>
+                <div class="wheel"><div id="wheel-0" class="wheel-content">A</div></div>
+                <button class="arrow-btn" onclick="rotate(0, 1)">▼</button>
+            </div>
+            <div class="dial-unit dial-2">
+                <button class="arrow-btn" onclick="rotate(1, -1)">▲</button>
+                <div class="wheel"><div id="wheel-1" class="wheel-content">A</div></div>
+                <button class="arrow-btn" onclick="rotate(1, 1)">▼</button>
+            </div>
+            <div class="dial-unit dial-3">
+                <button class="arrow-btn" onclick="rotate(2, -1)">▲</button>
+                <div class="wheel"><div id="wheel-2" class="wheel-content">A</div></div>
+                <button class="arrow-btn" onclick="rotate(2, 1)">▼</button>
+            </div>
+            <div class="dial-unit dial-4">
+                <button class="arrow-btn" onclick="rotate(3, -1)">▲</button>
+                <div class="wheel"><div id="wheel-3" class="wheel-content">A</div></div>
+                <button class="arrow-btn" onclick="rotate(3, 1)">▼</button>
+            </div>
+            <div class="dial-unit dial-5">
+                <button class="arrow-btn" onclick="rotate(4, -1)">▲</button>
+                <div class="wheel"><div id="wheel-4" class="wheel-content">A</div></div>
+                <button class="arrow-btn" onclick="rotate(4, 1)">▼</button>
+            </div>
+            <div class="dial-unit dial-6">
+                <button class="arrow-btn" onclick="rotate(5, -1)">▲</button>
+                <div class="wheel"><div id="wheel-5" class="wheel-content">A</div></div>
+                <button class="arrow-btn" onclick="rotate(5, 1)">▼</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="status-light">LOCKED</div>
+    <button class="reset-btn" onclick="resetLock()">RESET LOCK</button>
+
+    <script>
+        // 18개의 철자(A, B, C, D, E, G, H, I, L, M, N, O, P, R, S, T, U, Y)를 활용한 다이얼 데이터
+        const dialData = [
+            ['P', 'A', 'R', 'E', 'N', 'T'],
+            ['M', 'I', 'S', 'T', 'E', 'R'], 
+            ['C', 'O', 'U', 'S', 'I', 'N'], 
+            ['P', 'U', 'B', 'L', 'I', 'C'], 
+            ['L', 'A', 'D', 'I', 'E', 'S'],
+            ['M', 'I', 'S', 'T', 'E', 'R']  
+        ];
+
+
+        let currentIndices = [1, 2, 3, 4, 5, 0]; // 초기값은 정답이 아니도록 섞음
+        let isUnlocked = false;
+        let lastDirection = 0;
+
+        function rotate(dialIdx, direction) {
+            if (isUnlocked) return;
+            lastDirection = direction;
+            currentIndices[dialIdx] = (currentIndices[dialIdx] + direction + 6) % 6;
+            updateUI();
+            checkPassword();
+        }
+
+        function updateUI() {
+            for (let i = 0; i < 6; i++) {
+                const el = document.getElementById(`wheel-${i}`);
+                el.innerText = dialData[i][currentIndices[i]];
+                
+                // 애니메이션 효과
+                el.style.transition = 'none';
+                el.style.transform = `translateY(${lastDirection * 15}px)`;
+                el.style.opacity = '0.4';
+                
+                setTimeout(() => {
+                    el.style.transition = '0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                    el.style.transform = 'translateY(0)';
+                    el.style.opacity = '1';
+                }, 10);
+            }
+        }
+
+        function checkPassword() {
+            const match = currentIndices.every((val, idx) => val === password[idx]);
+            const container = document.getElementById('lock-container');
+            const status = document.getElementById('status-light');
+
+            if (match) {
+                isUnlocked = true;
+                container.classList.add('unlocked');
+                status.innerText = "ACCESS GRANTED : WELCOME";
+                status.classList.add('unlocked');
+                if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+            }
+        }
+
+        function resetLock() {
+            isUnlocked = false;
+            currentIndices = [1, 2, 3, 4, 5, 0];
+            document.getElementById('lock-container').classList.remove('unlocked');
+            const status = document.getElementById('status-light');
+            status.innerText = "LOCKED";
+            status.classList.remove('unlocked');
+            updateUI();
+        }
+
+        updateUI();
+    </script>
+</body>
+</html>

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>열 네번의 기회</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;800&display=swap');
+        /* 모바일에서 전체 스크롤이 가능하도록 overflow 수정 */
+        body { font-family: 'Pretendard', sans-serif; -webkit-user-select: none; user-select: none; overflow-y: auto; overflow-x: hidden; }
+        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3); }
+        .bg-mesh { background: radial-gradient(at 0% 0%, #ff9a9e 0, transparent 50%), radial-gradient(at 100% 0%, #fad0c4 0, transparent 50%); background-color: #fce4ec; }
+        .q-card { transition: all 0.2s; cursor: pointer; border: 1px solid #e2e8f0; }
+        .q-card:hover { transform: translateY(-2px); border-color: #3b82f6; background: #eff6ff; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="bg-mesh min-h-screen flex items-center justify-center p-4">
+
+    <div id="app" class="max-w-md w-full glass rounded-[2.5rem] shadow-2xl p-6 space-y-4 relative border border-white my-8">
+        <div class="space-y-2">
+            <div class="flex justify-between items-end">
+                <div>
+                    <h1 class="text-3xl font-800 text-slate-800 tracking-tight">열 네번의 기회</h1>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">참의 신, 거짓의 신, 변덕의 신</p>
+                </div>
+                <div class="text-right">
+                    <p id="turn-txt" class="text-xs font-bold text-rose-500">질문 14/14</p>
+                    <p id="attempt-txt" class="text-xs font-bold text-slate-400">목숨 14/14</p>
+                </div>
+            </div>
+            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                <div id="p-bar" class="bg-gradient-to-r from-rose-400 to-orange-400 h-full w-full transition-all duration-700"></div>
+            </div>
+        </div>
+
+        <div id="q-area" class="space-y-2">
+            <p class="text-[11px] font-bold text-slate-400 px-1">정답은 0~99 사이의 숫자입니다. 질문을 선택하여 세 신들의 대답을 들으세요.</p>
+            <div id="q-container" class="grid gap-2"></div>
+        </div>
+
+        <div class="bg-slate-50/80 rounded-[1.5rem] p-4 min-h-[200px] max-h-[450px] overflow-y-auto border border-slate-200/50 shadow-inner">
+            <div id="history" class="space-y-3 text-sm">
+                <div class="text-center text-slate-400 py-10 italic text-xs">
+                    세 명의 신 중 한 명은 항상 진실을,<br>한 명은 항상 거짓을, 한 명은 항상 변덕으로 답합니다.<br>누가 누구인지 알아내는 질문을 통해 답을 찾으세요.
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-3">
+            <div class="relative group">
+                <input type="number" id="guess-input" placeholder="0~99 사이의 숫자는?" 
+                    class="w-full px-6 py-4 rounded-2xl border-2 border-transparent bg-white shadow-sm focus:border-rose-300 outline-none transition-all text-slate-700 font-bold text-center text-xl">
+                <button onclick="checkAnswer()" class="absolute right-2 top-2 bottom-2 bg-slate-900 text-white px-5 rounded-xl font-bold hover:bg-rose-600 transition-colors">확인</button>
+            </div>
+            <button id="giveup-btn" onclick="showModal('giveup')" class="w-full text-slate-400 text-[10px] font-bold uppercase tracking-widest hover:text-rose-500 transition-colors hidden">
+                진실을 감당할 수 없나요? 포기하기
+            </button>
+        </div>
+    </div>
+
+    <div id="modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-6 z-50">
+        <div class="bg-white rounded-[3rem] p-8 max-w-sm w-full text-center space-y-6 shadow-2xl animate-in zoom-in-95 duration-300">
+            <div id="m-icon" class="text-6xl"></div>
+            <div class="space-y-2">
+                <h2 id="m-title" class="text-2xl font-800 text-slate-800"></h2>
+                <p id="m-desc" class="text-slate-500 text-sm font-medium"></p>
+            </div>
+            <div class="space-y-2">
+                <div id="m-answer" class="bg-rose-50 text-rose-600 p-3 rounded-2xl font-mono font-800 text-xl border border-rose-100"></div>
+                <div id="m-code" class="bg-slate-900 text-emerald-400 p-3 rounded-2xl font-mono font-bold text-sm border border-slate-700"></div>
+            </div>
+            <button onclick="restartGame()" class="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold">다시 도전</button>
+        </div>
+    </div>
+
+    <script>
+        let targetNumber = 0;
+        let turns = 14;
+        let lives = 14;
+        let godRoles = {};
+
+        const RESULT_CODES = {
+            win: "cmVndWxhdGlvbg==",
+            fail: "bXl3aHlieQ==",
+            giveup: "bXl3aHlieQ=="
+        };
+
+        const QUESTION_POOL = [
+            { text: "2의 배수인가요?", check: (n) => n % 2 === 0 },
+            { text: "3의 배수인가요?", check: (n) => n % 3 === 0 },
+            { text: "4의 배수인가요?", check: (n) => n % 4 === 0 },
+            { text: "5의 배수인가요?", check: (n) => n % 5 === 0 },
+            { text: "7의 배수인가요?", check: (n) => n % 7 === 0 },
+            { text: "10의 배수인가요?", check: (n) => n % 10 === 0 },
+            { text: "14의 배수인가요?", check: (n) => n % 14 === 0 },
+            { text: "소수(Prime Number)인가요?", check: (n) => {
+                if (n < 2) return false;
+                for (let i = 2; i <= Math.sqrt(n); i++) if (n % i === 0) return false;
+                return true;
+            }},
+            { text: "50보다 큰가요?", check: (n) => n > 50 },
+            { text: "14보다 큰가요?", check: (n) => n > 14 },    
+            { text: "14보다 작은가요?", check: (n) => n < 14 },
+            { text: "14인가요?", check: (n) => n === 14 },     
+            { text: "25보다 작은가요?", check: (n) => n < 25 },
+            { text: "75보다 큰가요?", check: (n) => n > 75 },
+            { text: "두 자리 수인가요?", check: (n) => n >= 10 },
+            { text: "두 자릿수가 서로 같나요? (11, 22...)", check: (n) => n >= 10 && Math.floor(n/10) === n%10 },
+            { text: "십의 자리 숫자가 짝수인가요?", check: (n) => Math.floor(n/10) % 2 === 0 },
+            { text: "일의 자리 숫자가 십의 자리보다 큰가요?", check: (n) => (n % 10) > Math.floor(n/10) },
+            { text: "각 자릿수의 합이 10 이상인가요?", check: (n) => Math.floor(n/10) + (n % 10) >= 10 },
+            { text: "각 자릿수의 곱이 20보다 큰가요?", check: (n) => Math.floor(n/10) * (n % 10) > 20 },
+            { text: "홀수인가요?", check: (n) => n % 2 !== 0 },
+            { text: "완전제곱수인가요? (1, 4, 9, 16...)", check: (n) => Math.sqrt(n) % 1 === 0 },
+            { text: "10보다 작은가요?", check: (n) => n < 10 },
+            { text: "30~40 사이의 숫자인가요?", check: (n) => n >= 30 && n <= 40 },
+            { text: "80~99 사이의 숫자인가요?", check: (n) => n >= 80 && n <= 99 },
+            { text: "6의 배수인가요?", check: (n) => n % 6 === 0 },
+            { text: "9의 배수인가요?", check: (n) => n % 9 === 0 },
+            { text: "숫자에 '5'가 들어가나요?", check: (n) => String(n).includes('5') },
+            { text: "숫자에 '3'이 들어가나요?", check: (n) => String(n).includes('3') },
+            { text: "숫자에 '7'이 들어가나요?", check: (n) => String(n).includes('7') },
+            { text: "숫자에 '0'이 들어가나요?", check: (n) => String(n).includes('0') },
+            { text: "일의 자리가 0인가요?", check: (n) => n % 10 === 0 },
+            { text: "십의 자리가 5인가요?", check: (n) => Math.floor(n/10) === 5 },
+            { text: "합계가 5의 배수인가요?", check: (n) => (Math.floor(n/10) + (n%10)) % 5 === 0 },
+            { text: "자릿수를 바꾸면 더 커지나요?", check: (n) => (n % 10 * 10 + Math.floor(n/10)) > n },
+            { text: "12보다 큰가요?", check: (n) => n > 12 },
+            { text: "60보다 작은가요?", check: (n) => n < 60 },
+            { text: "15의 배수인가요?", check: (n) => n % 15 === 0 },
+            { text: "8의 배수인가요?", check: (n) => n % 8 === 0 },
+            { text: "두 숫자의 차이가 2 이하인가요?", check: (n) => Math.abs(Math.floor(n/10) - (n%10)) <= 2 },
+            { text: "두 숫자의 차이가 5 이상인가요?", check: (n) => Math.abs(Math.floor(n/10) - (n%10)) >= 5 },
+            { text: "짝수이면서 10보다 큰가요?", check: (n) => n % 2 === 0 && n > 10 },
+            { text: "3의 배수이면서 홀수인가요?", check: (n) => n % 3 === 0 && n % 2 !== 0 },
+            { text: "20 미만인가요?", check: (n) => n < 20 },
+            { text: "40 초과인가요?", check: (n) => n > 40 },
+            { text: "숫자를 뒤집어도 소수인가요?", check: (n) => {
+                let rev = (n % 10 * 10 + Math.floor(n/10));
+                if (rev < 2) return false;
+                for (let i = 2; i <= Math.sqrt(rev); i++) if (rev % i === 0) return false;
+                return true;
+            }},
+            { text: "일의 자리가 1, 3, 5, 7, 9 중 하나인가요?", check: (n) => [1,3,5,7,9].includes(n%10) },
+            { text: "십의 자리가 1, 2, 3 중 하나인가요?", check: (n) => [1,2,3].includes(Math.floor(n/10)) },
+            { text: "양의 자리 숫자가 서로 다른가요?", check: (n) => Math.floor(n/10) !== n%10 },
+            { text: "숫자의 합이 짝수인가요?", check: (n) => (Math.floor(n/10) + n%10) % 2 === 0 },
+            { text: "5로 나누면 나머지가 1인가요?", check: (n) => n % 5 === 1 },
+            { text: "5로 나누면 나머지가 2인가요?", check: (n) => n % 5 === 2 },
+            { text: "5로 나누면 나머지가 3인가요?", check: (n) => n % 5 === 3 },
+            { text: "5로 나누면 나머지가 4인가요?", check: (n) => n % 5 === 4 },
+            { text: "15로 나누면 나머지가 14인가요?", check: (n) => n % 15 === 14 },
+            { text: "16으로 나누면 나머지가 14인가요?", check: (n) => n % 16 === 14 },
+            { text: "17로 나누면 나머지가 14인가요?", check: (n) => n % 17 === 14 },
+            { text: "18로 나누면 나머지가 14인가요?", check: (n) => n % 18 === 14 },
+            { text: "19로 나누면 나머지가 14인가요?", check: (n) => n % 19 === 14 },
+           { text: "20으로 나누면 나머지가 14인가요?", check: (n) => n % 20 === 14 },
+            { text: "숫자가 0인가요?", check: (n) => n === 0 }
+        ];
+
+        function initGame() {
+            targetNumber = Math.floor(Math.random() * 100);
+            turns = 14;
+            lives = 14;
+            const roles = ['truth', 'liar', 'random'].sort(() => Math.random() - 0.5);
+            godRoles = { 'A': roles[0], 'B': roles[1], 'C': roles[2] };
+            document.getElementById('history').innerHTML = '';
+            updateUI();
+            drawQuestions();
+        }
+
+        function drawQuestions() {
+            const container = document.getElementById('q-container');
+            container.innerHTML = '';
+            if (turns <= 0) {
+                container.innerHTML = '<p class="text-center text-rose-500 font-bold py-2">질문 기회를 모두 사용했습니다!</p>';
+                return;
+            }
+            const shuffled = [...QUESTION_POOL].sort(() => 0.5 - Math.random()).slice(0, 3);
+            shuffled.forEach(q => {
+                const btn = document.createElement('div');
+                btn.className = "q-card bg-white p-3 rounded-xl flex justify-between items-center text-xs font-bold text-slate-600 shadow-sm";
+                btn.innerHTML = `<span>${q.text}</span> <i data-lucide="help-circle" class="w-4 h-4 text-slate-300"></i>`;
+                btn.onclick = () => askGods(q);
+                container.appendChild(btn);
+            });
+            lucide.createIcons();
+        }
+
+        function askGods(q) {
+            if (turns <= 0) return;
+            turns--;
+            const realAns = q.check(targetNumber);
+            const results = {};
+            ['A', 'B', 'C'].forEach(name => {
+                const role = godRoles[name];
+                if (role === 'truth') results[name] = realAns ? '예' : '아니오';
+                else if (role === 'liar') results[name] = realAns ? '아니오' : '예';
+                else results[name] = Math.random() > 0.5 ? '예' : '아니오';
+            });
+            const hist = document.getElementById('history');
+            const item = document.createElement('div');
+            item.className = "space-y-2 animate-in slide-in-from-bottom-2 duration-300 pb-2";
+            item.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <span class="bg-slate-200 text-slate-600 px-2 py-0.5 rounded text-[9px] font-bold italic">Q.${14-turns}</span>
+                    <span class="text-slate-700 font-bold text-xs">${q.text}</span>
+                </div>
+                <div class="grid grid-cols-3 gap-1.5">
+                    ${['A', 'B', 'C'].map(name => `
+                        <div class="bg-white p-1.5 rounded-lg border border-slate-100 shadow-sm text-center">
+                            <div class="text-[8px] font-black text-slate-400 mb-0.5">GOD ${name}</div>
+                            <div class="font-800 text-sm ${results[name] === '예' ? 'text-blue-500' : 'text-rose-500'}">${results[name]}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                <hr class="border-slate-100 mt-2">
+            `;
+            hist.prepend(item);
+            updateUI();
+            drawQuestions();
+        }
+
+        function updateUI() {
+            document.getElementById('turn-txt').innerText = `질문 ${turns}/14`;
+            document.getElementById('attempt-txt').innerText = `목숨 ${lives}/14`;
+            document.getElementById('p-bar').style.width = `${(turns / 14) * 100}%`;
+            if (turns === 0) document.getElementById('giveup-btn').classList.remove('hidden');
+        }
+
+        function checkAnswer() {
+            const input = document.getElementById('guess-input');
+            const val = parseInt(input.value);
+            if (isNaN(val)) return;
+            if (val === targetNumber) {
+                showModal('win');
+            } else {
+                lives--;
+                updateUI();
+                if (lives <= 0) showModal('fail');
+                else alert(`오답입니다! 남은 목숨: ${lives}번`);
+            }
+            input.value = '';
+        }
+
+        function showModal(type) {
+            const m = document.getElementById('modal');
+            const ansBox = document.getElementById('m-answer');
+            const codeBox = document.getElementById('m-code');
+            m.classList.replace('hidden', 'flex');
+
+            ansBox.innerText = `정답: ${targetNumber}`;
+            codeBox.innerText = `CODE: ${atob(RESULT_CODES[type])}`;
+
+            if (type === 'win') {
+                document.getElementById('m-icon').innerText = '🎉';
+                document.getElementById('m-title').innerText = '승리하였습니다!';
+                document.getElementById('m-desc').innerText = '진실의 목소리를 완벽히 가려내셨습니다.';
+            } else if (type === 'fail') {
+                document.getElementById('m-icon').innerText = '💀';
+                document.getElementById('m-title').innerText = 'GAME OVER';
+                document.getElementById('m-desc').innerText = '거짓의 굴레에 갇히고 말았습니다.';
+            } else if (type === 'giveup') {
+                document.getElementById('m-icon').innerText = '🏳️';
+                document.getElementById('m-title').innerText = '기권하셨습니다';
+                document.getElementById('m-desc').innerText = '진실은 때로 가혹한 법이죠.';
+            }
+        }
+
+        function restartGame() {
+            document.getElementById('modal').classList.replace('flex', 'hidden');
+            document.getElementById('giveup-btn').classList.add('hidden');
+            initGame();
+        }
+
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.onkeydown = e => { if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && e.keyCode == 73)) return false; };
+
+        initGame();
+    </script>
+</body>
+</html>

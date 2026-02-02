@@ -94,7 +94,7 @@
 
         .char-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(5, 1fr);
             gap: 15px;
         }
 
@@ -122,7 +122,7 @@
         .char-btn:active { transform: scale(0.9); }
 
         @media (max-width: 400px) {
-            .char-grid { grid-template-columns: repeat(3, 1fr); }
+            .char-grid { grid-template-columns: repeat(5, 1fr); }
         }
     </style>
 </head>
@@ -148,6 +148,8 @@
         <button class="char-btn" onclick="rotate('7', 270, 'bottom')">8</button>
         <button class="char-btn" onclick="rotate('A', 0)">9</button>
         <button class="char-btn" onclick="rotate('3', 90)">A</button>
+        <button class="char-btn" onclick="rotate(null, 0)">B</button>
+        <button class="char-btn" onclick="rotate(null, 0)">C</button>
     </div>
 </div>
 

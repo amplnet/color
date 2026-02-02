@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfect Alignment Nonogram</title>
+    <script>
+  // 1. 우클릭 차단 (아무 반응 없음)
+  document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+  }, false);
+
+  // 2. 단축키 차단 (F12, Ctrl+Shift+I, Ctrl+U 등)
+  document.addEventListener('keydown', function(e) {
+    const forbiddenKeys = [
+      123, // F12
+      73,  // I (Ctrl+Shift+I)
+      74,  // J (Ctrl+Shift+J)
+      85,  // U (Ctrl+U)
+      83,  // S (Ctrl+S)
+      67   // C (Ctrl+C - 복사 방지까지 원할 경우 추가)
+    ];
+
+    if (
+      forbiddenKeys.includes(e.keyCode) && 
+      (e.ctrlKey || e.shiftKey || e.keyCode === 123)
+    ) {
+      e.preventDefault();
+      e.stopPropagation(); // 이벤트 전파 중단
+      return false;
+    }
+  }, false);
+</script>
+    <style>
+        :root {
+            --c-size: 30px;        /* 셀 크기 고정 */
+            --hint-w: 100px;       /* 힌트 영역 너비 */
+            --hint-h: 120px;       /* 힌트 영역 높이 */
+            --thick: 2px solid #333; /* 굵은 선 */
+            --thin: 1px solid #ccc;  /* 얇은 선 */
+            --bg: #fdfdfd;
+        }
+
+        body {
+            background-color: var(--bg);
+            font-family: 'Pretendard', -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px 10px;
+            margin: 0;
+        }
+
+        .header { text-align: center; margin-bottom: 30px; color: #222; }
+
+        /* 메인 컨테이너: 전체 너비를 고정하여 유동성 차단 */
+        .game-container {
+            display: inline-block;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        /* 레이아웃 테이블 구조 */
+        .nono-layout {
+            display: grid;
+            grid-template-columns: var(--hint-w) auto;
+            grid-template-rows: var(--hint-h) auto;
+            /* 전체 너비 = 힌트너비 + (셀크기 * 13) */
+            width: calc(var(--hint-w) + (var(--c-size) * 11));
+        }
+
+        .corner {
+            grid-column: 1; grid-row: 1;
+            border-right: var(--thick);
+            border-bottom: var(--thick);
+            background: #f9f9f9;
+        }
+
+        /* 힌트 영역 */
+        .col-hints {
+            grid-column: 2; grid-row: 1;
+            display: flex;
+            border-bottom: var(--thick);
+        }
+        .row-hints {
+            grid-column: 1; grid-row: 2;
+            display: flex; flex-direction: column;
+            border-right: var(--thick);
+        }
+
+        /* 개별 힌트 박스 */
+        .h-box {
+            box-sizing: border-box;
+            display: flex; justify-content: center; align-items: center;
+            background: #fafafa;
+        }
+        .col-h { width: var(--c-size); height: var(--hint-h); flex-direction: column; justify-content: flex-end; padding-bottom: 5px; gap: 4px; border-right: 1px solid #eee; }
+        .row-h { width: var(--hint-w); height: var(--c-size); justify-content: flex-end; padding-right: 10px; gap: 6px; border-bottom: 1px solid #eee; }
+
+        .n-chip {
+            background: #eee; min-width: 18px; height: 18px; border-radius: 3px;
+            font-size: 11px; font-weight: bold; text-align: center; line-height: 18px; color: #555;
+        }
+
+        /* 그리드 */
+        .grid {
+            grid-column: 2; grid-row: 2;
+            display: grid;
+            grid-template-columns: repeat(11, var(--c-size));
+            grid-template-rows: repeat(11, var(--c-size));
+            width: calc(11 * var(--c-size));
+            height: calc(11 * var(--c-size));
+        }
+
+        .cell {
+            width: var(--c-size); height: var(--c-size);
+            border-right: var(--thin);
+            border-bottom: var(--thin);
+            box-sizing: border-box;
+            cursor: pointer;
+            background: #fff;
+        }
+
+        /* 굵은 선 클래스 (JS로 부여) */
+        .b-right { border-right: var(--thick) !important; }
+        .b-bottom { border-bottom: var(--thick) !important; }
+        /* 외곽선 보정 */
+        .b-left { border-left: var(--thick) !important; }
+        .b-top { border-top: var(--thick) !important; }
+
+        /* 상태 */
+        .cell.filled { background-color: #333 !important; }
+        .cell.x-mark::after { content: "•"; color: #aaa; font-size: 20px; display: block; text-align: center; line-height: var(--c-size); }
+
+        .btns { margin-top: 30px; display: flex; gap: 10px; }
+        button { padding: 10px 20px; cursor: pointer; border: 1px solid #ccc; background: #fff; border-radius: 4px; font-weight: bold; }
+        button:hover { background: #eee; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>DOTDOTGRAM</h1>
+    <p>🔍 SEARCH NEEDED</p>
+</div>
+
+<div class="game-container">
+    <div class="nono-layout">
+        <div class="corner"></div>
+        <div id="colHints" class="col-hints"></div>
+        <div id="rowHints" class="row-hints"></div>
+        <div id="grid" class="grid"></div>
+    </div>
+</div>
+
+<div class="btns">
+    <button onclick="clearGrid()">초기화</button>
+    <button style="color:red" onclick="fullReset()">리셋</button>
+</div>
+
+<script>
+    const S = 11;
+    const rHints = [['N'], ['S'], ['N'], [''], ['N'], ['A'], ['I'], [''], ['T'], ['E'], ['E']];
+    const cHints = [['N'], ['S'], ['G'], ['E'], ['O'], ['E'], ['E'], [''], [''], [''], ['']];
+
+    let userGrid = Array.from({ length: S }, () => Array(S).fill(0));
+
+    function init() {
+        const rh = document.getElementById('rowHints');
+        const ch = document.getElementById('colHints');
+        const gd = document.getElementById('grid');
+
+        // 힌트 생성
+        rHints.forEach(h => {
+            const div = document.createElement('div');
+            div.className = 'h-box row-h';
+            h.forEach(n => div.innerHTML += `<div class="n-chip">${n}</div>`);
+            rh.appendChild(div);
+        });
+
+        cHints.forEach(h => {
+            const div = document.createElement('div');
+            div.className = 'h-box col-h';
+            h.forEach(n => div.innerHTML += `<div class="n-chip">${n}</div>`);
+            ch.appendChild(div);
+        });
+
+        drawGrid();
+    }
+
+    function drawGrid() {
+        const gd = document.getElementById('grid');
+        gd.innerHTML = '';
+        for (let r = 0; r < S; r++) {
+            for (let c = 0; c < S; c++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                
+                // 굵은 선 로직 (5, 10번째)
+                if ((c + 1) % 5 === 0 && c !== S - 1) cell.classList.add('b-right');
+                if ((r + 1) % 5 === 0 && r !== S - 1) cell.classList.add('b-bottom');
+                
+                // 테두리 보정
+                if (c === 0) cell.classList.add('b-left');
+                if (r === 0) cell.classList.add('b-top');
+                if (c === S - 1) cell.classList.add('b-right');
+                if (r === S - 1) cell.classList.add('b-bottom');
+
+                if (userGrid[r][c] === 1) cell.classList.add('filled');
+                if (userGrid[r][c] === 2) cell.classList.add('x-mark');
+                
+                cell.onmousedown = (e) => {
+                    e.preventDefault();
+                    if (e.button === 0) userGrid[r][c] = userGrid[r][c] === 1 ? 0 : 1;
+                    else if (e.button === 2) userGrid[r][c] = userGrid[r][c] === 2 ? 0 : 2;
+                    drawGrid();
+                };
+                cell.oncontextmenu = (e) => e.preventDefault();
+                gd.appendChild(cell);
+            }
+        }
+    }
+
+    function clearGrid() {
+        userGrid = Array.from({ length: S }, () => Array(S).fill(0));
+        drawGrid();
+    }
+
+    function fullReset() {
+        if(confirm("모든 데이터를 지울까요?")) clearGrid();
+    }
+
+    init();
+</script>
+
+</body>
+</html>

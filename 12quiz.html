@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Labyrinth Hotel - Rotation Decoder</title>
+    <style>
+        @font-face {
+            font-family: 'DSEG7Classic';
+            src: url('https://amplnet.github.io/color/DSEG7Classic-Regular.ttf') format('truetype');
+        }
+
+        :root {
+            --bg: #1a1a1a;
+            --accent: #ff4d4d;
+            --box-bg: #252525;
+            --text: #e0e0e0;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'DSEG7Classic', monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            text-align: center;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        h2 { font-size: 1.2rem; margin-bottom: 30px; letter-spacing: 1px; color: #888; }
+
+        .display-box {
+            width: 150px;
+            height: 150px;
+            background: var(--box-bg);
+            border: 2px dashed #444;
+            border-radius: 15px;
+            margin: 0 auto 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .selected-char {
+            font-size: 3rem;
+            width: 80px;
+            height: 80px;
+            border: 3px solid var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-family: 'DSEG7Classic', sans-serif;
+            position: relative;
+            overflow: hidden; /* 원 밖으로 나가는 가림막 차단 */
+        }
+
+        /* 가림막 공통 스타일 */
+        .selected-char::after {
+            content: '';
+            position: absolute;
+            background-color: #000;
+            display: none;
+            z-index: 5;
+        }
+
+        /* [수정] 하단 30% 가리기 클래스 */
+        .mask-bottom::after {
+            display: block;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 35%; /* 하단 30% 설정 */
+        }
+
+        .rotation-value {
+            margin-top: 15px;
+            font-weight: bold;
+            color: var(--accent);
+            font-size: 1.2rem;
+            min-height: 1.5rem;
+        }
+
+        .char-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .char-btn {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #555;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.5rem;
+            transition: all 0.2s;
+            background: transparent;
+            color: var(--text);
+            font-family: 'DSEG7Classic', sans-serif;
+        }
+
+        .char-btn:hover {
+            border-color: var(--accent);
+            background: rgba(255, 77, 77, 0.1);
+        }
+
+        .char-btn:active { transform: scale(0.9); }
+
+        @media (max-width: 400px) {
+            .char-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>articles introduced lost sounds</h2>
+     <h3>ans : 123456789a</h3>
+
+    <div class="display-box">
+        <div id="target" class="selected-char">?</div>
+        <div id="info" class="rotation-value">SELECT CHAR</div>
+    </div>
+
+    <div class="char-grid">
+        <button class="char-btn" onclick="rotate('5', 45)">1</button>
+        <button class="char-btn" onclick="rotate('3', 90)">2</button>
+        <button class="char-btn" onclick="rotate('9', 0)">3</button>
+        <button class="char-btn" onclick="rotate('7', 270, 'bottom')">4</button>
+        <button class="char-btn" onclick="rotate('8', 270)">5</button>
+        <button class="char-btn" onclick="rotate('7', 90, 'bottom')">6</button>
+        <button class="char-btn" onclick="rotate('4', 180)">7</button>
+        <button class="char-btn" onclick="rotate('7', 270, 'bottom')">8</button>
+        <button class="char-btn" onclick="rotate('A', 0)">9</button>
+        <button class="char-btn" onclick="rotate('3', 90)">A</button>
+    </div>
+</div>
+
+<script>
+    function rotate(char, deg, maskType) {
+        const target = document.getElementById('target');
+        const info = document.getElementById('info');
+        
+        if (deg === null) {
+            target.innerText = "";
+            target.style.borderColor = "transparent";
+            info.innerText = "";
+            return;
+        }
+
+        // 초기화: 모든 가림막 클래스 제거
+        target.classList.remove('mask-bottom');
+
+        // 하단 가림막 적용
+        if (maskType === 'bottom') {
+            target.classList.add('mask-bottom');
+        }
+
+        target.style.borderColor = "var(--accent)";
+        target.innerText = char;
+        target.style.transform = `rotate(${deg}deg)`;
+        info.innerText = `→ ${deg}°`;
+    }
+</script>
+
+</body>
+</html>

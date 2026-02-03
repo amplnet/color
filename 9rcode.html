@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Labyrinth - 3x3 Seamless Swap</title>
+    <style>
+        :root {
+            --bg: #f8fafc; --card: #ffffff; --primary: #2563eb;
+            --accent: #d97706; --text: #0f172a; --muted: #64748b;
+            --border: transparent;
+            --shadow: 0 10px 25px rgba(0,0,0,0.08);
+        }
+        body {
+            background-color: var(--bg); color: var(--text); font-family: 'Pretendard', sans-serif;
+            display: flex; flex-direction: column; align-items: center; padding: 1.5rem; margin: 0;
+            min-height: 100vh; touch-action: manipulation;
+        }
+
+        .manual-section {
+            width: 100%; max-width: 400px; background: var(--card); border-radius: 20px;
+            padding: 15px; margin-bottom: 25px; box-shadow: var(--shadow);
+            border-left: 5px solid var(--primary); font-size: 0.85rem; box-sizing: border-box;
+            text-align: center;
+        }
+        h2 { color: var(--primary); letter-spacing: 2px; font-weight: 900; margin: 15px 0; }
+
+        .puzzle-container {
+            display: flex; flex-direction: column; align-items: center;
+            background: var(--card); padding: 10px;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            border: none;
+        }
+
+        .grid-3x3 {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 0;
+            transition: filter 0.3s ease; /* 흑백 전환 애니메이션 */
+        }
+
+        /* 흑백 모드 활성화 시 적용될 스타일 */
+        .grid-3x3.grayscale img {
+            filter: grayscale(100%);
+        }
+
+        .slot {
+            width: 100px; height: 100px; background: #f1f5f9;
+            border: none;
+            border-radius: 0;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; position: relative; overflow: hidden;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+        .slot img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; display: block; }
+        
+        .slot.selected {
+            outline: 4px solid var(--primary);
+            outline-offset: -4px;
+            z-index: 10;
+        }
+
+        #status-msg { margin-top: 20px; font-weight: 800; color: var(--muted); min-height: 24px; }
+
+        .btn-group { margin-top: 25px; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+        button {
+            padding: 12px 20px; background: #fff; border: none;
+            border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            font-size: 0.9rem;
+        }
+        button:hover { color: var(--primary); transform: translateY(-2px); }
+        
+        /* 흑백 전환 버튼 강조 스타일 */
+        button.toggle-active {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        @media (max-width: 380px) {
+            .grid-3x3 { grid-template-columns: repeat(3, 85px); grid-template-rows: repeat(3, 85px); }
+            .slot { width: 85px; height: 85px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="manual-section">
+        <h3>🗝️ 9R ?O?E</h3>
+        <p>?LI?? I?A?ES AN? S?A?.</p>
+    </div>
+
+    <h2>NINE</h2>
+
+    <div class="puzzle-container">
+        <div class="grid-3x3" id="main-grid"></div>
+    </div>
+
+    <div id="status-msg">RESET ?O??LETE?.</div>
+
+    <div class="btn-group">
+        <button id="gray-toggle" onclick="toggleGrayscale()">?RA?S?ALE: O??</button>
+        <button onclick="shuffleTiles()">S????LE</button>
+        <button onclick="resetPuzzle()">RESET</button>
+    </div>
+
+    <script>
+        const imageUrls = [
+            "https://amplnet.github.io/color/9/a.png",
+            "https://amplnet.github.io/color/9/b.png",
+            "https://amplnet.github.io/color/9/c.png",
+            "https://amplnet.github.io/color/9/d.png",
+            "https://amplnet.github.io/color/9/e.png",
+            "https://amplnet.github.io/color/9/f.png",
+            "https://amplnet.github.io/color/9/g.png",
+            "https://amplnet.github.io/color/9/h.png",
+            "https://amplnet.github.io/color/9/i.png"
+        ];
+
+        let currentOrder = [...Array(9).keys()]; 
+        let firstSelectedIndex = null;
+        let isSolved = false;
+        let isGrayscale = false; // 흑백 모드 상태 변수
+
+        function init() {
+            const grid = document.getElementById('main-grid');
+            grid.innerHTML = '';
+            for (let i = 0; i < 9; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'slot';
+                slot.id = `slot-${i}`;
+                slot.onclick = () => handleTileClick(i);
+                grid.appendChild(slot);
+            }
+            shuffleTiles();
+        }
+
+        function render() {
+            for (let i = 0; i < 9; i++) {
+                const slot = document.getElementById(`slot-${i}`);
+                slot.innerHTML = `<img src="${imageUrls[currentOrder[i]]}" alt="Tile">`;
+                slot.classList.remove('selected');
+            }
+            checkWin();
+        }
+
+        function handleTileClick(index) {
+            if (isSolved) return;
+            const clickedSlot = document.getElementById(`slot-${index}`);
+
+            if (firstSelectedIndex === null) {
+                firstSelectedIndex = index;
+                clickedSlot.classList.add('selected');
+                document.getElementById('status-msg').innerText = "?LI?? I?A?ES AN? S?A?.";
+            } else if (firstSelectedIndex === index) {
+                firstSelectedIndex = null;
+                clickedSlot.classList.remove('selected');
+                document.getElementById('status-msg').innerText = "?IS?ISSE?.";
+            } else {
+                const temp = currentOrder[firstSelectedIndex];
+                currentOrder[firstSelectedIndex] = currentOrder[index];
+                currentOrder[index] = temp;
+                firstSelectedIndex = null;
+                render();
+            }
+        }
+
+        // 흑백 전환 함수
+        function toggleGrayscale() {
+            const grid = document.getElementById('main-grid');
+            const btn = document.getElementById('gray-toggle');
+            
+            isGrayscale = !isGrayscale;
+            
+            if (isGrayscale) {
+                grid.classList.add('grayscale');
+                btn.innerText = "??A?S?ALE: ON";
+                btn.classList.add('toggle-active');
+            } else {
+                grid.classList.remove('grayscale');
+                btn.innerText = "??A?S?ALE: O??";
+                btn.classList.remove('toggle-active');
+            }
+        }
+
+        function checkWin() {
+            const win = currentOrder.every((val, idx) => val === idx);
+            if (win) {
+                isSolved = true;
+                document.getElementById('status-msg').innerText = "S?N? ?O??LETE.";
+            }
+        }
+
+        function shuffleTiles() {
+            isSolved = false;
+            for (let i = currentOrder.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [currentOrder[i], currentOrder[j]] = [currentOrder[j], currentOrder[i]];
+            }
+            firstSelectedIndex = null;
+            render();
+            document.getElementById('status-msg').innerText = "S????LE?.";
+        }
+
+        function resetPuzzle() {
+            isSolved = false;
+            currentOrder = [...Array(9).keys()];
+            firstSelectedIndex = null;
+            render();
+            document.getElementById('status-msg').innerText = "RESETTE?.";
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>

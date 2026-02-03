@@ -38,7 +38,7 @@
             --hint-h: 120px;       /* 힌트 영역 높이 */
             --thick: 2px solid #333; /* 굵은 선 */
             --thin: 1px solid #ccc;  /* 얇은 선 */
-            --bg: #fdfdfd;
+            --bg: #adadad;
         }
 
         body {
@@ -56,7 +56,7 @@
         /* 메인 컨테이너: 전체 너비를 고정하여 유동성 차단 */
         .game-container {
             display: inline-block;
-            background: white;
+            background: #bebebe;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
@@ -75,7 +75,7 @@
             grid-column: 1; grid-row: 1;
             border-right: var(--thick);
             border-bottom: var(--thick);
-            background: #f9f9f9;
+            background: #cecece;
         }
 
         /* 힌트 영역 */
@@ -94,7 +94,7 @@
         .h-box {
             box-sizing: border-box;
             display: flex; justify-content: center; align-items: center;
-            background: #fafafa;
+            background: #dfdfdf;
         }
         .col-h { width: var(--c-size); height: var(--hint-h); flex-direction: column; justify-content: flex-end; padding-bottom: 5px; gap: 4px; border-right: 1px solid #eee; }
         .row-h { width: var(--hint-w); height: var(--c-size); justify-content: flex-end; padding-right: 10px; gap: 6px; border-bottom: 1px solid #eee; }
@@ -120,7 +120,7 @@
             border-bottom: var(--thin);
             box-sizing: border-box;
             cursor: pointer;
-            background: #fff;
+            background: #ddd;
         }
 
         /* 굵은 선 클래스 (JS로 부여) */

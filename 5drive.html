@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Alphabet Drive: EIS Edition</title>
+    <style>
+        :root {
+            --c1: #000000; --c2: #f8f9fa; --c3: #ff4d4d; 
+            --c4: #ffeb3b; --c5: #4caf50;
+        }
+
+        body {
+            background-color: #1a1a1a;
+            color: var(--c2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: 'Pretendard', sans-serif;
+            margin: 0; padding: 20px;
+            overflow: hidden;
+        }
+
+        /* 신호등 인터페이스 */
+        #traffic-ui-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        #traffic-light-housing {
+            display: flex;
+            gap: 15px;
+            background: #222;
+            padding: 15px 30px;
+            border-radius: 60px;
+            border: 4px solid #444;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        }
+
+        .light {
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            background: #111;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: rgba(255,255,255,0.05);
+            transition: all 0.2s;
+        }
+
+        /* 신호 활성화 색상 */
+        .light.active[data-type="stop"] { background: var(--c3); color: #fff; box-shadow: 0 0 25px var(--c3); }
+        .light.active[data-type="warn"] { background: var(--c4); color: #000; box-shadow: 0 0 25px var(--c4); }
+        .light.active[data-type="left"] { background: var(--c5); color: #fff; box-shadow: 0 0 25px var(--c5); }
+        .light.active[data-type="straight"] { background: var(--c5); color: #fff; box-shadow: 0 0 25px var(--c5); }
+        .light.active[data-type="right"] { background: var(--c5); color: #fff; box-shadow: 0 0 25px var(--c5); }
+
+        #game-container {
+            position: relative;
+            background: #333;
+            border: 10px solid #444;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+        }
+
+        canvas { display: block; }
+
+        .controls {
+            margin-top: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .car-selector { display: flex; gap: 15px; }
+        .car-btn {
+            padding: 15px 30px;
+            border: 3px solid transparent;
+            cursor: pointer;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+        .btn-white { background: #fff; color: #000; }
+        .btn-black { background: #000; color: #fff; border-color: #555; }
+        .btn-green { background: var(--c5); color: #fff; }
+        .active-car { border-color: var(--c4); transform: scale(1.1); }
+        
+        #reset-btn {
+            padding: 12px 25px;
+            background: var(--c3);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="traffic-ui-box">
+        <div style="margin-bottom: 8px; font-weight: bold; color: #888;">교차로 진입 신호</div>
+        <div id="traffic-light-housing">
+            <div id="light-stop" data-type="stop" class="light">●</div>
+            <div id="light-warn" data-type="warn" class="light">●</div>
+            <div id="light-left" data-type="left" class="light">←</div>
+            <div id="light-straight" data-type="straight" class="light">↑</div>
+            <div id="light-right" data-type="right" class="light">→</div>
+        </div>
+    </div>
+
+    <div id="game-container">
+        <canvas id="gridCanvas"></canvas>
+    </div>
+
+    <div class="controls">
+        <div class="car-selector">
+            <button id="btn-W" class="car-btn btn-white active-car" onclick="selectCar('#fff')">차</button>
+            <button id="btn-G" class="car-btn btn-green" onclick="selectCar('#4caf50')">차</button>
+            <button id="btn-B" class="car-btn btn-black" onclick="selectCar('#111')">차</button>
+        </div>
+        <button id="reset-btn" onclick="resetGame()">초기화</button>
+    </div>
+
+<script>
+    const canvas = document.getElementById('gridCanvas');
+    const ctx = canvas.getContext('2d');
+    const gridSize = 9;
+    const spacing = 70;
+    canvas.width = (gridSize + 1) * spacing;
+    canvas.height = (gridSize + 1) * spacing;
+
+    let currentPos = { x: 5, y: 5 };
+    let rotation = 0;
+    let selectedColor = '#fff';
+    let paths = [{x: 5, y: 5}];
+    let isFirstMove = true;
+
+    // --- 차량별 설정 ---
+    const carConfigs = {
+        '#fff': { dx: -1, dy: 0, icon: '←', label: '' },
+        '#111': { dx: 1, dy: 0, icon: '→', label: '' },
+        '#4caf50': { dx: 0, dy: -1, icon: '↑', label: '' }
+    };
+
+    // --- 방향별 신호 맵 ---
+    const trafficMap = {};
+    function setTraffic(x, y, dx, dy, config) {
+        trafficMap[`${x},${y},${dx},${dy}`] = config;
+    }
+function setupAlphabetSignals() {
+    // E (하얀차: 왼쪽 출발)
+    //직진
+    setTraffic(4, 5, -1, 0, { straight: true });   
+    setTraffic(3, 5, -1, 0, { straight: true });   
+    setTraffic(2, 5, -1, 0, { straight: true });  
+    setTraffic(1, 5, -1, 0, { stop: true, left: true, straight: false, right: true }); // 위아래 분기
+    setTraffic(1, 4, 0, -1, { straight: true });  
+    setTraffic(1, 3, 0, -1, { straight: true });  
+    setTraffic(1, 2, 0, -1, { straight: true });  
+    setTraffic(1, 4, 0, 1, { straight: true });  
+    setTraffic(1, 3, 0, 1, { straight: true });  
+    setTraffic(1, 2, 0, 1, { straight: true });  
+    setTraffic(1, 1, 0, -1, { stop: true, right: true }); // 상단 가로
+    setTraffic(1, 1, -1, 0, { stop: true, left: true }); // 상단 가로
+    setTraffic(2, 1, -1, 0, { straight: true });  
+    setTraffic(3, 1, -1, 0, { straight: true });  
+    setTraffic(4, 1, -1, 0, { stop: true });  
+    setTraffic(4, 1, 1, 0, { stop: true });  
+    setTraffic(2, 1, 1, 0, { straight: true });  
+    setTraffic(3, 1, 1, 0, { straight: true });  
+    setTraffic(1, 5, 0, 1, { straight: true, left: true }); // 위아래 분기
+                
+    setTraffic(1, 6, 0, -1, { straight: true });  
+    setTraffic(1, 7, 0, -1, { straight: true });  
+    setTraffic(1, 8, 0, -1, { straight: true });  
+    setTraffic(1, 6, 0, 1, { straight: true });  
+    setTraffic(1, 7, 0, 1, { straight: true });  
+    setTraffic(1, 8, 0, 1, { straight: true });  
+    setTraffic(1, 9, 0, 1, { stop: true, left: true }); // 상단 가로
+    setTraffic(1, 9, -1, 0, { stop: true, right: true }); // 상단 가로
+    setTraffic(2, 9, -1, 0, { straight: true });  
+    setTraffic(3, 9, -1, 0, { straight: true });  
+    setTraffic(4, 9, -1, 0, { stop: true });  
+    setTraffic(4, 9, 1, 0, { stop: true });  
+    setTraffic(2, 9, 1, 0, { straight: true });  
+    setTraffic(3, 9, 1, 0, { straight: true });  
+    setTraffic(1, 5, 0, -1, { straight: true, right: true }); // 위아래 분기
+
+    // I (검은차: 위쪽 출발)
+    setTraffic(5, 4, 0, -1, { straight: true });  
+    setTraffic(5, 3, 0, -1, { straight: true });  
+    setTraffic(5, 4, 0, 1, { straight: true });  
+    setTraffic(5, 3, 0, 1, { straight: true });  
+    setTraffic(5, 2, 0, -1, { stop : true, left: true, right: true }); // 상단바
+    setTraffic(5, 2, 1, 0, {  straight: true, right: true }); // 상단바
+    setTraffic(5, 2, -1, 0, { left: true, straight: true }); // 상단바
+    setTraffic(4, 2, -1, 0, { straight: true });  
+    setTraffic(4, 2, 1, 0, { straight: true });  
+    setTraffic(3, 2, 0, -1, { stop : true });  
+    setTraffic(6, 2, -1, 0, { straight: true });  
+    setTraffic(6, 2, 1, 0, { straight: true });  
+    setTraffic(7, 2, 0, -1, { stop : true });  
+    setTraffic(5, 5, 0, 1, { straight: true });
+    setTraffic(5, 5, 0, -1, { straight: true });
+    setTraffic(5, 6, 0, -1, { straight: true });  
+    setTraffic(5, 7, 0, -1, { straight: true });  
+        setTraffic(5, 6, 0, 1, { straight: true });  
+    setTraffic(5, 7, 0, 1, { straight: true });  
+    setTraffic(5, 8, 0, 1, { stop : true, left: true, right: true }); // 상단바
+    setTraffic(5, 8, 1, 0, {  straight: true, right: true }); // 상단바
+    setTraffic(5, 8, -1, 0, { left: true, straight: true }); // 상단바
+    setTraffic(4, 8, -1, 0, { straight: true });  
+    setTraffic(4, 8, 1, 0, { straight: true });  
+    setTraffic(3, 8, 0, -1, { stop : true });  
+    setTraffic(6, 8, -1, 0, { straight: true });  
+    setTraffic(6, 8, 1, 0, { straight: true });  
+    setTraffic(7, 8, 0, -1, { stop : true });  
+    
+    // S (초록차: 오른쪽 출발)
+    setTraffic(6, 5, 1, 0, { straight: true });  
+    setTraffic(7, 5, 1, 0, { straight: true });   
+    setTraffic(8, 5, 1, 0, { stop : true, left : true });   
+    setTraffic(6, 5, -1, 0, { straight: true });  
+    setTraffic(7, 5, -1, 0, { straight: true });   
+    setTraffic(8, 5, 0, 1, { stop : true, left : true });  
+    setTraffic(8, 4, 0, -1, { stop : true, left : true });  
+    setTraffic(7, 4, -1, 0, { stop : true, right : true });  
+    setTraffic(7, 3, 0, -1, { stop : true, right : true });  
+    
+    setTraffic(7, 3, -1, 0, { stop : true, left : true });  
+    setTraffic(8, 3, 1, 0, { stop : true });  
+    setTraffic(8, 5, 1, 0, { stop : true, left : true });  
+    setTraffic(8, 4, 1, 0, { stop : true, right : true });  
+    setTraffic(7, 4, 0, 1, { stop : true, left : true });  
+    
+}
+    function drawRoads() {
+        ctx.fillStyle = '#333';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.strokeStyle = '#444';
+        ctx.lineWidth = 50;
+        for(let i=1; i<=gridSize; i++) {
+            ctx.beginPath(); ctx.moveTo(spacing, i * spacing); ctx.lineTo(canvas.width - spacing, i * spacing); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(i * spacing, spacing); ctx.lineTo(i * spacing, canvas.height - spacing); ctx.stroke();
+        }
+
+        ctx.strokeStyle = '#555';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([15, 15]);
+        for(let i=1; i<=gridSize; i++) {
+            ctx.beginPath(); ctx.moveTo(spacing, i * spacing); ctx.lineTo(canvas.width-spacing, i * spacing); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(i * spacing, spacing); ctx.lineTo(i * spacing, canvas.height-spacing); ctx.stroke();
+        }
+        ctx.setLineDash([]);
+    }
+
+    function drawPaths() {
+        if (paths.length < 2) return;
+        ctx.strokeStyle = '#f8f9fa';
+        ctx.lineWidth = 8;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        ctx.moveTo(paths[0].x * spacing, paths[0].y * spacing);
+        for(let i=1; i<paths.length; i++) {
+            ctx.lineTo(paths[i].x * spacing, paths[i].y * spacing);
+        }
+        ctx.stroke();
+    }
+
+    function drawCar() {
+        const x = currentPos.x * spacing;
+        const y = currentPos.y * spacing;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(rotation);
+        
+        // 차체
+        ctx.fillStyle = selectedColor;
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = selectedColor;
+        ctx.fillRect(-15, -25, 30, 50);
+        
+        // 유리창 및 디테일
+        ctx.fillStyle = 'rgba(0,0,0,0.4)';
+        ctx.fillRect(-11, -15, 22, 12);
+        ctx.fillStyle = '#fff'; // 헤드라이트
+        ctx.fillRect(-12, -27, 8, 5);
+        ctx.fillRect(4, -27, 8, 5);
+        ctx.restore();
+    }
+
+    function drawGuide() {
+        if (!isFirstMove) return;
+        const config = carConfigs[selectedColor];
+        const x = currentPos.x * spacing + config.dx * 60;
+        const y = currentPos.y * spacing + config.dy * 60;
+        
+        ctx.save();
+        ctx.font = "bold 40px Arial";
+        ctx.fillStyle = "#fff";
+        ctx.textAlign = "center";
+        ctx.globalAlpha = Math.abs(Math.sin(Date.now() / 400));
+        ctx.fillText(config.icon, x, y);
+        ctx.restore();
+    }
+
+    function updateTrafficLights(dx, dy) {
+        document.querySelectorAll('.light').forEach(l => l.classList.remove('active'));
+        if (isFirstMove && currentPos.x === 5 && currentPos.y === 5) return;
+
+        const config = trafficMap[`${currentPos.x},${currentPos.y},${dx},${dy}`];
+        if (config) {
+            if (config.stop) document.getElementById('light-stop').classList.add('active');
+            if (config.warn) document.getElementById('light-warn').classList.add('active');
+            if (config.left) document.getElementById('light-left').classList.add('active');
+            if (config.straight) document.getElementById('light-straight').classList.add('active');
+            if (config.right) document.getElementById('light-right').classList.add('active');
+        } else {
+            // 기본 신호: 직진 가능
+            document.getElementById('light-stop').classList.add('active');
+        }
+    }
+
+    function move(dx, dy, angle) {
+        if (isFirstMove) {
+            const allowed = carConfigs[selectedColor];
+            if (dx !== allowed.dx || dy !== allowed.dy) return;
+            isFirstMove = false;
+        }
+
+        const nextX = currentPos.x + dx;
+        const nextY = currentPos.y + dy;
+
+        if(nextX >= 1 && nextX <= gridSize && nextY >= 1 && nextY <= gridSize) {
+            currentPos = { x: nextX, y: nextY };
+            rotation = angle;
+            paths.push({...currentPos});
+            updateTrafficLights(dx, dy);
+        }
+    }
+
+    function render() {
+        drawRoads();
+        drawPaths();
+        drawGuide();
+        drawCar();
+        requestAnimationFrame(render);
+    }
+
+    function selectCar(color) {
+        selectedColor = color;
+        const buttons = document.querySelectorAll('.car-btn');
+        buttons.forEach(btn => {
+            btn.classList.remove('active-car');
+            const btnColor = btn.id === 'btn-W' ? '#fff' : btn.id === 'btn-B' ? '#4caf50' : '#111';
+            if (btnColor === color) btn.classList.add('active-car');
+        });
+        resetGame(false); // 차 변경 시 현재 궤적 초기화
+    }
+
+    function resetGame(fullReset = true) {
+        currentPos = { x: 5, y: 5 };
+        paths = [{x: 5, y: 5}];
+        rotation = 0;
+        isFirstMove = true;
+        updateTrafficLights(0, 0);
+    }
+
+    window.addEventListener('keydown', (e) => {
+        if(e.key === 'ArrowUp') move(0, -1, 0);
+        if(e.key === 'ArrowDown') move(0, 1, Math.PI);
+        if(e.key === 'ArrowLeft') move(-1, 0, -Math.PI/2);
+        if(e.key === 'ArrowRight') move(1, 0, Math.PI/2);
+    });
+
+    setupAlphabetSignals();
+    render();
+</script>
+</body>
+</html>

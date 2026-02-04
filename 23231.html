@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>THE TRIPLE ROOMS: TWENTY-THREE</title>
+    <script>
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            const forbiddenKeys = [123, 73, 74, 85, 83, 67];
+            if (forbiddenKeys.includes(e.keyCode) && (e.ctrlKey || e.shiftKey || e.keyCode === 123)) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+
+        :root {
+            --bg: #F8FAFC;
+            --card-bg: #FFFFFF;
+            --text-main: #1E293B;
+            --accent: #3B82F6;
+            --border: #E2E8F0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: var(--text-main); font-family: 'Inter', sans-serif; min-height: 100vh; overflow-x: hidden; }
+
+        #lobby {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 50px 20px; transition: opacity 0.5s; min-height: 100vh;
+        }
+        .lobby-title { font-size: 2.5rem; font-weight: 900; margin-bottom: 10px; text-transform: uppercase; letter-spacing: -2px; }
+        .lobby-desc { color: #64748B; margin-bottom: 40px; font-size: 0.95rem; text-align: center; }
+        
+        .room-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; max-width: 900px; width: 100%; }
+        .room-card {
+            background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px; padding: 30px 10px;
+            text-align: center; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+        .room-card:hover { transform: translateY(-5px); border-color: var(--accent); box-shadow: 0 15px 20px -5px rgba(0,0,0,0.1); }
+        .room-card h2 { font-size: 1.2rem; margin-bottom: 5px; font-weight: 900; }
+
+        #room-view { display: none; padding: 40px 15px; flex-direction: column; align-items: center; width: 100%; }
+        
+        /* 단일 이미지 컨테이너 최적화 */
+        .image-container { 
+            width: 100%; max-width: 600px; margin-bottom: 30px;
+            background: #fff; border-radius: 20px; border: 1px solid var(--border);
+            overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .image-container img {
+            width: 100%; height: auto; display: block; object-fit: contain;
+        }
+
+        /* 23칸 입력 그리드 - 모바일 최적화 */
+        .grid-container { 
+            display: flex; flex-wrap: wrap; justify-content: center; 
+            gap: 8px; max-width: 1000px; margin-bottom: 40px; 
+            padding: 0 5px;
+        }
+        .cell-unit { display: flex; flex-direction: column; align-items: center; width: 42px; }
+        .cell { 
+            width: 100%; height: 50px; border-radius: 10px; border: 2px solid transparent; 
+            display: flex; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            background: white;
+        }
+        .cell input { 
+            width: 100%; height: 100%; border: none; background: transparent; 
+            text-align: center; font-size: 1.2rem; font-weight: 800; outline: none; text-transform: uppercase;
+        }
+        .cell:focus-within { transform: translateY(-2px); border-color: var(--accent); box-shadow: 0 5px 10px rgba(59, 130, 246, 0.2); }
+        .asterisk { margin-top: 4px; height: 18px; color: var(--accent); font-weight: 900; font-size: 1rem; }
+
+        .back-btn {
+            background: var(--text-main); color: white; border: none; padding: 14px 40px;
+            border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+            margin-bottom: 40px;
+        }
+
+        /* 배경색 클래스 */
+        .bg-white { border: 2px solid #E2E8F0 !important; }
+        .bg-red { background-color: #FEE2E2; }
+        .bg-blue { background-color: #DBEAFE; }
+        .bg-green { background-color: #DCFCE7; }
+        .bg-brown { background-color: #DCFCE7; }
+        .bg-yellow { background-color: #FEF9C3; }
+        .bg-gray { background-color: #F1F5F9; }
+        .bg-purple { background-color: #F3E8FF; }
+        .bg-orange { background-color: #F3822D; }
+        .bg-greengreen { background-color: #81702b; }
+        
+        /* 모바일 전용 미디어 쿼리 */
+        @media (max-width: 600px) {
+            .lobby-title { font-size: 2rem; }
+            .room-grid { grid-template-columns: 1fr; gap: 10px; }
+            .cell-unit { width: calc(20% - 8px); } /* 모바일에서 5개씩 한 줄에 배치 */
+            .cell { height: 45px; }
+            .cell input { font-size: 1.1rem; }
+            .image-container { border-radius: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="lobby">
+        <h1 class="lobby-title">TWENTY-THREE</h1>
+        <p class="lobby-desc">두 개의 답, 세 개의 방, 스물 세개의 가능성</br> 정답 형식 : 방 세 개의 결과를 연달아 입력</p>
+        <div class="room-grid">
+            <div class="room-card" onclick="enterRoom(1)">
+                <h2>ROOM 1</h2>
+                <p>첫 번째 방</p>
+            </div>
+            <div class="room-card" onclick="">
+                <h2></h2>
+                <p></p>
+            </div>
+            <div class="room-card" onclick="enterRoom(3)">
+                <h2>ROOM 3</h2>
+                <p>세 번째 방</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="room-view">
+        <h1 id="room-title" style="margin-bottom: 25px; font-weight: 900; letter-spacing: -1px; font-size: 1.8rem;">ROOM 1</h1>
+        
+        <div class="image-container" id="single-image-board"></div>
+
+        <div class="grid-container" id="input-grid"></div>
+
+        <button class="back-btn" onclick="exitRoom()">되돌리기</button>
+    </div>
+
+    <script>
+        const ROOM_CONFIG = {
+            1: {
+                title: "ROOM 1　첫 번째 방",
+                image: "https://amplnet.github.io/color/zoo2.png", 
+                cells: [
+                    ['bg-greengreen', true],   ['bg-greengreen', false], ['bg-greengreen', false], ['bg-greengreen', false], ['bg-gray', false],
+                    ['bg-gray', false],  ['bg-gray', false], ['bg-gray', false], ['bg-gray', false], ['bg-gray', false],
+                    ['bg-gray', false], ['bg-white', false], ['bg-white', true], ['bg-white', false], ['bg-white', false],
+                    ['bg-white', false],['bg-orange', true], ['bg-orange', false], ['bg-orange', false], ['bg-orange', false],
+                    ['bg-yellow', false],  ['bg-yellow', true], ['bg-yellow', false]
+                ]
+            },
+
+            3: {
+                title: "ROOM 3　세 번째 방",
+                image: "https://amplnet.github.io/color/room2.png",
+                cells: [
+                    ['bg-yellow', false], ['bg-yellow', false], ['bg-yellow', false], ['bg-yellow', true], ['bg-yellow', false],
+                    ['bg-yellow', false], ['bg-red', false], ['bg-red', true], ['bg-red', false], ['bg-red', false],
+                    ['bg-greengreen', false], ['bg-greengreen', false], ['bg-greengreen', false], ['bg-greengreen', false], ['bg-orange', true],
+                    ['bg-orange', false], ['bg-orange', false], ['bg-greengreen', false], ['bg-greengreen', false], ['bg-greengreen', false],
+                    ['bg-greengreen', false], ['bg-greengreen', false], ['bg-greengreen', true]
+                ]
+            }
+        };
+
+        const lobby = document.getElementById('lobby');
+        const roomView = document.getElementById('room-view');
+
+        function enterRoom(id) {
+            const config = ROOM_CONFIG[id];
+            document.getElementById('room-title').textContent = config.title;
+            
+            // 이미지 출력 (1개만)
+            const imgBoard = document.getElementById('single-image-board');
+            imgBoard.innerHTML = `<img src="${config.image}" alt="Hint">`;
+
+            const grid = document.getElementById('input-grid');
+            grid.innerHTML = '';
+            config.cells.forEach((cellData, idx) => {
+                const [cls, hasStar] = cellData;
+                const unit = document.createElement('div');
+                unit.className = 'cell-unit';
+
+                const cell = document.createElement('div');
+                cell.className = `cell ${cls}`;
+
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.maxLength = 1;
+                input.dataset.idx = idx;
+
+                // 자동 포커스 이동
+                input.addEventListener('input', e => {
+                    if (e.target.value.length === 1) {
+                        const next = grid.querySelector(`input[data-idx="${idx + 1}"]`);
+                        if (next) next.focus();
+                    }
+                });
+                input.addEventListener('keydown', e => {
+                    if (e.key === 'Backspace' && e.target.value === '') {
+                        const prev = grid.querySelector(`input[data-idx="${idx - 1}"]`);
+                        if (prev) prev.focus();
+                    }
+                });
+
+                cell.appendChild(input);
+                unit.appendChild(cell);
+
+                const star = document.createElement('div');
+                star.className = 'asterisk';
+                if (hasStar) star.textContent = '★';
+                unit.appendChild(star);
+
+                grid.appendChild(unit);
+            });
+
+            lobby.style.display = 'none';
+            roomView.style.display = 'flex';
+            window.scrollTo(0, 0);
+        }
+
+        function exitRoom() {
+            roomView.style.display = 'none';
+            lobby.style.display = 'flex';
+        }
+    </script>
+</body>
+</html>

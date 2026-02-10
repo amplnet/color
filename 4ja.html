@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Labyrinth Hotel - Master Lock System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Noto+Serif+KR:wght@200;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050505;
+            --gold: #ffcc00;
+            --red: #d90429;
+            --white: #ffffff;
+            /* 회색을 기존 #424242보다 밝은 #888로 변경 */
+            --lock-gray: #888888; 
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--white);
+            font-family: 'Noto Serif KR', serif;
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-font { font-family: 'Cinzel', serif; letter-spacing: 0.2rem; }
+        .ans-font { font-family: 'Syncopate', sans-serif; letter-spacing: 0.1rem; }
+
+        /* 자물쇠 구조 최적화 (rem 사용) */
+        .lock-wrapper {
+            position: relative;
+            width: 17.5rem; /* 280px */
+            height: 25rem; /* 400px */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            scale: 0.9;
+        }
+
+        @media (min-width: 48rem) { /* 768px */
+            .lock-wrapper { width: 20rem; height: 27.5rem; scale: 1; }
+        }
+
+        .shackle {
+            width: 9.375rem;
+            height: 10rem;
+            border: 1.375rem solid #444; /* 조금 더 밝은 쇠 느낌 */
+            border-bottom: none;
+            border-radius: 4.6875rem 4.6875rem 0 0;
+            position: absolute;
+            top: 0;
+            z-index: 1;
+            box-shadow: inset -0.5rem 0 0.9375rem rgba(0,0,0,0.6);
+        }
+
+        .lock-body {
+            width: 17.5rem;
+            height: 20.625rem;
+            background: linear-gradient(145deg, #181818, #080808);
+            border-radius: 2.5rem 2.5rem 6.25rem 6.25rem;
+            position: absolute;
+            bottom: 0;
+            z-index: 2;
+            border: 0.0625rem solid #222;
+            box-shadow: 0 1.875rem 3.75rem rgba(0,0,0,0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 2.1875rem;
+        }
+
+        .dial {
+            position: relative;
+            width: 12.5rem;
+            height: 12.5rem;
+            background: #000;
+            border-radius: 50%;
+            border: 0.25rem solid #111;
+            box-shadow: inset 0 0 1.875rem rgba(0,0,0,1);
+        }
+
+        .dir-unit {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .triangle-icon {
+            width: 0; height: 0;
+            border-left: 0.625rem solid transparent;
+            border-right: 0.625rem solid transparent;
+            border-bottom: 0.875rem solid #333;
+            transition: all 0.2s;
+        }
+
+        .dir-unit:hover .triangle-icon { border-bottom-color: var(--gold); }
+        .dir-unit:active .triangle-icon { border-bottom-color: var(--red); transform: scale(0.8); }
+
+        .unit-up { top: 0.75rem; left: 50%; transform: translateX(-50%); }
+        .unit-right { right: 0.75rem; top: 50%; transform: translateY(-50%); }
+        .unit-down { bottom: 0.75rem; left: 50%; transform: translateX(-50%); }
+        .unit-left { left: 0.75rem; top: 50%; transform: translateY(-50%); }
+
+        .unit-up .triangle-icon { transform: rotate(0deg); }
+        .unit-right .triangle-icon { transform: rotate(90deg); }
+        .unit-down .triangle-icon { transform: rotate(180deg); }
+        .unit-left .triangle-icon { transform: rotate(270deg); }
+
+        .mini-val {
+            font-family: 'Syncopate', sans-serif;
+            font-size: 0.7rem;
+            color: var(--gold);
+            font-weight: 700;
+            margin: 0.25rem;
+        }
+
+        .center-dome {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 3.75rem; height: 3.75rem;
+            background: radial-gradient(circle at 30% 30%, #1a1a1a, #000);
+            border-radius: 50%;
+            border: 0.0625rem solid #222;
+            box-shadow: 0.625rem 0.625rem 1.25rem rgba(0,0,0,0.5);
+        }
+
+        .clue-row { padding-left: 1rem; border-left: 0.125rem solid #2a2a2a; }
+        .clue-row.solved { border-left-color: var(--red); }
+        
+        /* 반응형 텍스트 크기 */
+        .main-ans-text {
+            font-size: clamp(3rem, 12vw, 6rem);
+        }
+
+        /* 400px 이하일 때 자물쇠를 아래로 배치 */
+        @media (max-width: 400px) {
+            #main-container {
+                flex-direction: column !important;
+            }
+            #clue-section {
+                order: 1 !important;
+            }
+            #lock-section {
+                order: 2 !important;
+            }
+        }
+    </style>
+</head>
+<body class="p-6 md:p-12 lg:p-16">
+
+    <div id="main-container" class="max-w-7xl w-full flex flex-col lg:grid lg:grid-cols-12 gap-12 lg:gap-20 items-center">
+        
+        <div id="clue-section" class="w-full lg:col-span-7 space-y-10 lg:space-y-14 order-2 lg:order-1">
+            <header>
+                <h1 class="header-font text-3xl md:text-5xl text-[var(--gold)] mb-3">四字成語</h1>
+                <div class="h-1 w-20 md:w-32 bg-red-600"></div>
+            </header>
+
+            <div class="space-y-8 md:space-y-10">
+                <div class="clue-row solved opacity-40">
+                    <span class="text-[0.625rem] md:text-[0.9rem] font-bold block mb-1 text-gray-300 uppercase tracking-widest">첫 번째 입력 (완료)</span>
+                    <p class="text-xl md:text-2xl italic text-gray-400 line-through">모든 방향이나 방면 </p>
+                </div>
+                <div class="clue-row">
+                    <span class="text-[0.625rem] md:text-[0.9rem] font-bold block mb-1 text-gray-400 uppercase tracking-widest">두 번째 입력</span>
+                    <p class="text-2xl md:text-3xl font-light">네가지 주요 방위</p>
+                </div>
+                <div class="clue-row">
+                    <span class="text-[0.625rem] md:text-[0.9rem] font-bold block mb-1 text-gray-400 uppercase tracking-widest">세 번째 입력</span>
+                    <p class="text-2xl md:text-3xl font-light">남보다 앞장서서 행동하여 본보기가 됨 </p>
+                </div>
+                <div class="clue-row">
+                    <span class="text-[0.625rem] md:text-[0.9rem] font-bold block mb-1 text-gray-400 uppercase tracking-widest">네 번째 입력</span>
+                    <p class="text-2xl md:text-3xl font-light">빈 방에서 배우자 없이 혼자 지냄 </p>
+                </div>
+                <div class="clue-row border-red-600/50">
+                    <span class="text-[0.625rem] md:text-[0.9rem] font-bold block mb-1 text-red-600 uppercase tracking-widest">다섯 번째 입력</span>
+                    <p class="text-2xl md:text-3xl text-red-600 font-bold tracking-tight">네 자리 숫자 비밀번호</p>
+                </div>
+            </div>
+
+            <div class="pt-8 md:pt-10 border-t border-gray-900">
+                <p class="text-[var(--gold)] text-[0.625rem] md:text-xs font-bold tracking-[0.4em] mb-4 uppercase">네 자리 숫자 비밀번호</p>
+                <div class="flex flex-col">
+                    <div id="main-ans" class="ans-font main-ans-text font-bold text-white tracking-tighter transition-all duration-500">
+                        0 4 0 0
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="lock-section" class="w-full lg:col-span-5 flex flex-col items-center order-1 lg:order-2">
+            <div class="lock-wrapper mb-10 lg:mb-16">
+                <div class="shackle"></div>
+                <div class="lock-body">
+                    <div class="dial">
+                        <div class="center-dome"></div>
+                        
+                        <div class="dir-unit unit-up" onclick="increment(0)">
+                            <span id="v-0" class="mini-val">0</span>
+                            <div class="triangle-icon"></div>
+                        </div>
+                        
+                        <div class="dir-unit unit-right" onclick="increment(1)">
+                            <div class="triangle-icon"></div>
+                            <span id="v-1" class="mini-val ml-2">4</span>
+                        </div>
+                        
+                        <div class="dir-unit unit-down" onclick="increment(2)">
+                            <div class="triangle-icon"></div>
+                            <span id="v-2" class="mini-val">0</span>
+                        </div>
+                        
+                        <div class="dir-unit unit-left" onclick="increment(3)">
+                            <span id="v-3" class="mini-val mr-2">0</span>
+                            <div class="triangle-icon"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="resetSystem()" class="group relative px-10 py-3 overflow-hidden border border-gray-800 font-bold uppercase tracking-[0.4em] text-[0.625rem] text-gray-400 transition-all hover:border-red-600 hover:text-red-600 active:scale-95">
+                <span class="relative z-10">초기화</span>
+                <div class="absolute inset-0 z-0 h-full w-0 bg-red-600/5 transition-all group-hover:w-full"></div>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let state = [0, 4, 0, 0];
+
+        function refreshUI() {
+            state.forEach((count, i) => {
+                const el = document.getElementById(`v-${i}`);
+                if (el) el.innerText = count;
+            });
+            document.getElementById('main-ans').innerText = state.join(' ');
+        }
+
+        function increment(idx) {
+            state[idx]++;
+            refreshUI();
+        }
+
+        function resetSystem() {
+            state = [0, 4, 0, 0];
+            refreshUI();
+        }
+
+        window.onload = refreshUI;
+    </script>
+</body>
+</html>

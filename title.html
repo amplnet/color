@@ -1,0 +1,136 @@
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;800&display=swap" rel="stylesheet">
+
+<div class="labyrinth-random-vivid" id="banner">
+  <div class="dynamic-glow" id="glow"></div>
+
+  <div class="banner-body">
+    <div class="text-section">
+      <h1 class="hero-26">26</h1>
+      <div class="info-tags">
+        <span class="tag-vivid">CHROMA PILGRIMAGE</span>
+      </div>
+    </div>
+
+    <div class="palette-grid-5x6" id="grid">
+      </div>
+  </div>
+</div>
+
+<style>
+:root {
+  /* 배경 랜덤 색상을 저장할 변수 */
+  --g1: #ff4d4d; --g2: #2196f3; --g3: #ffeb3b; --g4: #9c27b0; --g5: #4caf50;
+  
+  /* 기존 26색 팔레트 변수 (생략 없이 사용하세요) */
+  --c1: #000000; --c2: #f8f9fa; --c3: #ff4d4d; --c4: #ffeb3b; --c5: #4caf50; 
+  --c6: #ff9800; --c7: #2196f3; --c8: #9c27b0; --c9: #3f51b5; --c10: #fbc4ab; 
+  --c11: #c8e6c9; --c12: #d1c4e9; --c13: #ffcdd2; --c14: #b2dfdb; --c15: #fff9c4; 
+  --c16: #cfd8dc; --c17: #ffe0b2; --c18: #dcedc8; --c19: #f8bbd0; --c20: #e1bee7; 
+  --c21: #bbdefb; --c22: #f5f5dc; --c23: #e0e0e0; --c24: #ffccbc; --c25: #b3e5fc; --c26: #c5cae9;
+}
+
+.labyrinth-random-vivid {
+  width: 100%; max-width: 380px; height: 100px;
+  position: relative; overflow: hidden; border-radius: 20px;
+  background: #ffffff; display: flex; align-items: center;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+  font-family: 'Outfit', sans-serif;
+  border: 1px solid rgba(0,0,0,0.05);
+  animation: globalGrayscale 10s infinite;
+}
+
+/* 랜덤 5색 그라데이션 광원 */
+.dynamic-glow {
+  position: absolute; inset: -50%;
+  background: 
+    radial-gradient(circle at 20% 20%, var(--g1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, var(--g2) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, var(--g3) 0%, transparent 50%),
+    radial-gradient(circle at 20% 80%, var(--g4) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, var(--g5) 0%, transparent 50%);
+  filter: blur(40px) saturate(6.0) contrast(1.5); /* 극대화된 채도와 대비 */
+  opacity: 0.7;
+  animation: rotateGlow 15s infinite linear;
+}
+
+.banner-body {
+  position: relative; z-index: 10; width: 100%;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0 25px;
+}
+
+.hero-26 {
+  font-size: 64px; font-weight: 800; color: #111; line-height: 1.05;
+  letter-spacing: -4px; margin: 0;
+  text-shadow: 3px 3px 0px var(--c25), 6px 6px 0px var(--c14);
+}
+
+.tag-vivid { font-size: 10px; font-weight: 800; color: var(--c9); letter-spacing: 1px; }
+.tag-sub { font-size: 7px; color: #999; font-weight: 700; margin-top: 5px; }
+
+.palette-grid-5x6 {
+  display: grid; grid-template-columns: repeat(5, 12px); gap: 4px;
+}
+
+.dot {
+  width: 12px; height: 12px; background: var(--bg); border-radius: 3px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  filter: saturate(5.0) contrast(1.4); /* 도트 채도 극강화 */
+  animation: dotFadePersistent 10s infinite;
+  animation-delay: var(--delay);
+}
+
+@keyframes dotFadePersistent {
+  0% { filter: grayscale(0) saturate(5.0); transform: scale(1); }
+  35%, 100% { filter: grayscale(1) brightness(0.6); transform: scale(0.8); opacity: 0.5; }
+}
+
+@keyframes globalGrayscale {
+  0%, 50% { filter: grayscale(0); }
+  90%, 100% { filter: grayscale(1) contrast(1.2); }
+}
+
+@keyframes rotateGlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+</style>
+
+<script>
+const colors = [
+  '--c1','--c2','--c3','--c4','--c5','--c6','--c7','--c8','--c9','--c10',
+  '--c11','--c12','--c13','--c14','--c15','--c16','--c17','--c18','--c19','--c20',
+  '--c21','--c22','--c23','--c24','--c25','--c26'
+];
+
+function updateRandomColors() {
+  const banner = document.getElementById('banner');
+  // 26색 중 랜덤하게 5개 선택
+  const shuffled = [...colors].sort(() => 0.5 - Math.random());
+  const selected = shuffled.slice(0, 5);
+  
+  // CSS 변수 업데이트
+  selected.forEach((colorVar, index) => {
+    banner.style.setProperty(`--g${index + 1}`, `var(${colorVar})`);
+  });
+}
+
+// 1. 초기 실행
+updateRandomColors();
+
+// 2. 그리드 도트 생성 (기존 수동 입력을 자동화)
+const grid = document.getElementById('grid');
+colors.forEach((c, i) => {
+  const dot = document.createElement('div');
+  dot.className = 'dot';
+  dot.style.setProperty('--bg', `var(${c})`);
+  dot.style.setProperty('--delay', `${(i * 0.15).toFixed(1)}s`);
+  grid.appendChild(dot);
+});
+
+// 3. 10초마다(애니메이션 루프 끝날 때) 배경색 변경
+setInterval(() => {
+  // 루프가 끝나고 색상이 다시 돌아오는 시점에 맞춰 변경
+  updateRandomColors();
+}, 10000);
+</script>

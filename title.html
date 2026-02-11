@@ -1,27 +1,25 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;800&display=swap" rel="stylesheet">
 
-<div class="labyrinth-random-vivid" id="banner">
+<div class="labyrinth-glitch-vivid" id="banner">
   <div class="dynamic-glow" id="glow"></div>
 
   <div class="banner-body">
     <div class="text-section">
-      <h1 class="hero-26">26</h1>
+      <h1 class="hero-26" data-text="26">26</h1>
       <div class="info-tags">
         <span class="tag-vivid">CHROMA PILGRIMAGE</span>
       </div>
     </div>
 
-    <div class="palette-grid-5x6" id="grid">
-      </div>
+    <div class="palette-grid-5x6" id="grid"></div>
   </div>
+  
+  <div class="glitch-overlay"></div>
 </div>
 
 <style>
 :root {
-  /* 배경 랜덤 색상을 저장할 변수 */
   --g1: #ff4d4d; --g2: #2196f3; --g3: #ffeb3b; --g4: #9c27b0; --g5: #4caf50;
-  
-  /* 기존 26색 팔레트 변수 (생략 없이 사용하세요) */
   --c1: #000000; --c2: #f8f9fa; --c3: #ff4d4d; --c4: #ffeb3b; --c5: #4caf50; 
   --c6: #ff9800; --c7: #2196f3; --c8: #9c27b0; --c9: #3f51b5; --c10: #fbc4ab; 
   --c11: #c8e6c9; --c12: #d1c4e9; --c13: #ffcdd2; --c14: #b2dfdb; --c15: #fff9c4; 
@@ -29,27 +27,26 @@
   --c21: #bbdefb; --c22: #f5f5dc; --c23: #e0e0e0; --c24: #ffccbc; --c25: #b3e5fc; --c26: #c5cae9;
 }
 
-.labyrinth-random-vivid {
+.labyrinth-glitch-vivid {
   width: 100%; max-width: 380px; height: 100px;
   position: relative; overflow: hidden; border-radius: 20px;
   background: #ffffff; display: flex; align-items: center;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
   font-family: 'Outfit', sans-serif;
   border: 1px solid rgba(0,0,0,0.05);
-  animation: globalGrayscale 10s infinite;
+  /* clip-path가 포함된 bannerJitter 대신 위치만 흔들리는 jitter 적용 */
+  animation: globalGrayscaleLoop 10s infinite, bannerJitter 10s infinite;
 }
 
-/* 랜덤 5색 그라데이션 광원 */
 .dynamic-glow {
   position: absolute; inset: -50%;
-  background: 
-    radial-gradient(circle at 20% 20%, var(--g1) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, var(--g2) 0%, transparent 50%),
-    radial-gradient(circle at 50% 50%, var(--g3) 0%, transparent 50%),
-    radial-gradient(circle at 20% 80%, var(--g4) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, var(--g5) 0%, transparent 50%);
-  filter: blur(40px) saturate(6.0) contrast(1.5); /* 극대화된 채도와 대비 */
-  opacity: 0.7;
+  background: radial-gradient(circle at 20% 20%, var(--g1) 0%, transparent 50%),
+              radial-gradient(circle at 80% 20%, var(--g2) 0%, transparent 50%),
+              radial-gradient(circle at 50% 50%, var(--g3) 0%, transparent 50%),
+              radial-gradient(circle at 20% 80%, var(--g4) 0%, transparent 50%),
+              radial-gradient(circle at 80% 80%, var(--g5) 0%, transparent 50%);
+  filter: blur(40px) saturate(10.0) contrast(1.6);
+  opacity: 0.8;
   animation: rotateGlow 15s infinite linear;
 }
 
@@ -60,77 +57,115 @@
 }
 
 .hero-26 {
-  font-size: 64px; font-weight: 800; color: #111; line-height: 1.05;
-  letter-spacing: -4px; margin: 0;
+  font-size: 64px; font-weight: 800; color: #111; line-height: 1.1;
+  letter-spacing: -4px; margin: 0; position: relative;
   text-shadow: 3px 3px 0px var(--c25), 6px 6px 0px var(--c14);
 }
 
-.tag-vivid { font-size: 10px; font-weight: 800; color: var(--c9); letter-spacing: 1px; }
-.tag-sub { font-size: 7px; color: #999; font-weight: 700; margin-top: 5px; }
-
-.palette-grid-5x6 {
-  display: grid; grid-template-columns: repeat(5, 12px); gap: 4px;
+.hero-26::before, .hero-26::after {
+  content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  opacity: 0.8; z-index: -1;
 }
+
+.hero-26::before {
+  color: #ff00c1; left: 2px; text-shadow: -2px 0 #ff00c1;
+  animation: glitch-anim-1 2s infinite linear alternate-reverse;
+}
+
+.hero-26::after {
+  color: #00fff9; left: -2px; text-shadow: 2px 0 #00fff9;
+  animation: glitch-anim-2 3s infinite linear alternate-reverse;
+}
+
+.tag-vivid { font-size: 10px; font-weight: 800; color: var(--c9); letter-spacing: 1px; }
+
+.palette-grid-5x6 { display: grid; grid-template-columns: repeat(5, 12px); gap: 4px; }
 
 .dot {
   width: 12px; height: 12px; background: var(--bg); border-radius: 3px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-  filter: saturate(5.0) contrast(1.4); /* 도트 채도 극강화 */
-  animation: dotFadePersistent 10s infinite;
+  filter: saturate(10.0) contrast(1.5);
+  animation: dotGrayscaleLoop 10s infinite;
   animation-delay: var(--delay);
 }
 
-@keyframes dotFadePersistent {
-  0% { filter: grayscale(0) saturate(5.0); transform: scale(1); }
-  35%, 100% { filter: grayscale(1) brightness(0.6); transform: scale(0.8); opacity: 0.5; }
+/* 내부 슬라이스 글리치 효과 (배너 테두리는 유지) */
+.glitch-overlay {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(255, 255, 255, 0.3);
+  z-index: 15;
+  pointer-events: none;
+  opacity: 0;
+  animation: overlayGlitch 10s infinite;
 }
 
-@keyframes globalGrayscale {
+/* --- 애니메이션 정의 --- */
+
+@keyframes dotGrayscaleLoop {
+  0% { filter: grayscale(0) saturate(10.0); transform: scale(1); }
+  35%, 90% { filter: grayscale(1) brightness(0.6); transform: scale(0.85); opacity: 0.5; }
+  92% { filter: grayscale(0) saturate(12.0) contrast(2); transform: scale(1.1); }
+  100% { filter: grayscale(0) saturate(10.0); transform: scale(1); }
+}
+
+@keyframes globalGrayscaleLoop {
   0%, 50% { filter: grayscale(0); }
-  90%, 100% { filter: grayscale(1) contrast(1.2); }
+  90%, 94% { filter: grayscale(1); }
+  95% { filter: grayscale(0) contrast(2); }
+  100% { filter: grayscale(0); }
+}
+
+/* 수정됨: clip-path를 제거하여 배너 크기가 작아지지 않게 함 */
+@keyframes bannerJitter {
+  0%, 89%, 100% { transform: translate(0,0); }
+  90% { transform: translate(-3px, 1px); }
+  92% { transform: translate(3px, -1px); }
+  94% { transform: translate(-2px, 2px); }
+}
+
+/* 대신 overlay에서 슬라이스 효과 부여 */
+@keyframes overlayGlitch {
+  0%, 91%, 95%, 100% { opacity: 0; transform: scaleY(1); }
+  92% { opacity: 1; clip-path: inset(30% 0 60% 0); transform: skewX(10deg); }
+  94% { opacity: 1; clip-path: inset(60% 0 20% 0); transform: skewX(-10deg); }
+}
+
+@keyframes glitch-anim-1 {
+  0% { clip-path: inset(20% 0 30% 0); }
+  20% { clip-path: inset(60% 0 10% 0); }
+  100% { clip-path: inset(10% 0 70% 0); }
+}
+
+@keyframes glitch-anim-2 {
+  0% { clip-path: inset(15% 0 5% 0); }
+  100% { clip-path: inset(50% 0 40% 0); }
 }
 
 @keyframes rotateGlow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from { transform: rotate(0deg); } to { transform: rotate(360deg); }
 }
 </style>
 
 <script>
-const colors = [
-  '--c1','--c2','--c3','--c4','--c5','--c6','--c7','--c8','--c9','--c10',
-  '--c11','--c12','--c13','--c14','--c15','--c16','--c17','--c18','--c19','--c20',
-  '--c21','--c22','--c23','--c24','--c25','--c26'
-];
+const colors = ['--c1','--c2','--c3','--c4','--c5','--c6','--c7','--c8','--c9','--c10','--c11','--c12','--c13','--c14','--c15','--c16','--c17','--c18','--c19','--c20','--c21','--c22','--c23','--c24','--c25','--c26'];
 
 function updateRandomColors() {
   const banner = document.getElementById('banner');
-  // 26색 중 랜덤하게 5개 선택
   const shuffled = [...colors].sort(() => 0.5 - Math.random());
   const selected = shuffled.slice(0, 5);
-  
-  // CSS 변수 업데이트
   selected.forEach((colorVar, index) => {
     banner.style.setProperty(`--g${index + 1}`, `var(${colorVar})`);
   });
 }
 
-// 1. 초기 실행
-updateRandomColors();
-
-// 2. 그리드 도트 생성 (기존 수동 입력을 자동화)
 const grid = document.getElementById('grid');
 colors.forEach((c, i) => {
   const dot = document.createElement('div');
   dot.className = 'dot';
   dot.style.setProperty('--bg', `var(${c})`);
-  dot.style.setProperty('--delay', `${(i * 0.15).toFixed(1)}s`);
+  dot.style.setProperty('--delay', `${(i * 0.12).toFixed(2)}s`);
   grid.appendChild(dot);
 });
 
-// 3. 10초마다(애니메이션 루프 끝날 때) 배경색 변경
-setInterval(() => {
-  // 루프가 끝나고 색상이 다시 돌아오는 시점에 맞춰 변경
-  updateRandomColors();
-}, 10000);
+updateRandomColors();
+setInterval(updateRandomColors, 10000);
 </script>

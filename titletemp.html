@@ -1,0 +1,202 @@
+<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>COLORS - Phase 1: VIVID DREAM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&amp;family=Noto+Sans+KR:wght@300;500;700&amp;display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* [Stage 25 설정] */
+            /* 이전 스테이지 색상 소멸 (26번 블랙) */
+            --c1: #000000; --c2: #f8f9fa; --c3: #ff4d4d; --c4: #ffeb3b;
+            --c5: #4caf50; --c6: #ff9800; --c7: #2196f3; --c8: #9c27b0;
+            --c9: #3f51b5; --c10: #fbc4ab; --c11: #c8e6c9; --c12: #d1c4e9;
+            --c13: #ffcdd2; --c14: #b2dfdb; --c15: #fff9c4; --c16: #cfd8dc;
+            --c17: #ffe0b2; --c18: #dcedc8; --c19: #f8bbd0; --c20: #e1bee7;
+            --c21: #bbdefb; --c22: #f5f5dc; --c23: #e0e0e0; --c24: #ffccbc;
+            --c25: #b3e5fc; --c26: #c5cae9; 
+
+            --main-bg: #ffffff;
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            
+            /* Phase 1 미세 조절 변수 (Stage 25 수치) */
+            --intensity: 105%;   
+            --brightness: 105%; 
+            --contrast: 100%;
+        }
+
+        /* 공통 스타일 초기화 */
+        * { 
+            margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; 
+            -ms-overflow-style: none; scrollbar-width: none;
+        }
+        *::-webkit-scrollbar { display: none; }
+
+        body {
+            filter: grayscale(calc(100% - var(--intensity))) brightness(var(--brightness)) contrast(var(--contrast));
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: var(--main-bg);
+            color: var(--c1);
+            min-height: 100vh;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center; 
+            justify-content: center; 
+            padding: 40px 0;
+            overflow-x: hidden;
+        }
+
+        /* Phase 1: 생동감 넘치는 배경 조명 */
+        .background-lights {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1; display: flex; filter: blur(30px); opacity: 0.9;
+            animation: pulse 12s infinite alternate ease-in-out;
+        }
+        .light { flex: 1; height: 100%; transform: skewX(-15deg); mix-blend-mode: multiply; }
+
+        .container {
+            width: 95%;
+            max-width: 850px;
+            padding: 30px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 32px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.1);
+            margin: auto; 
+            position: relative;
+        }
+
+        /* Phase 1 전용 타이틀 애니메이션 */
+        .title-area {
+            flex-grow: 1; text-align: left; display: flex; flex-direction: column; justify-content: center; min-height: 140px;
+        }
+        .title-area h1 { 
+            font-family: 'Montserrat', sans-serif; font-size: 2.2rem; line-height: 1.1;
+            margin-bottom: 8px; color: #111; letter-spacing: -1px; font-weight: 800;
+            text-shadow: 2px 2px 0px var(--c25), 4px 4px 0px var(--c14); /* 페이즈 1의 화려함 */
+        }
+        .now-playing-text {
+            font-family: 'Montserrat', sans-serif; font-size: 0.9rem; font-weight: 700; color: var(--c9);
+            display: flex; align-items: center; gap: 8px;
+        }
+        .now-playing-text::before {
+            content: ""; width: 8px; height: 8px; background: var(--c3); border-radius: 50%; animation: blink 0.8s infinite;
+        }
+
+        /* 팔레트 영역 */
+        .palette {
+            flex-shrink: 0; display: grid; grid-template-columns: repeat(5, 1fr);
+            gap: 3px; background: #fff; padding: 6px; border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+        .palette-cell {
+            width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 800; font-family: 'Montserrat', sans-serif;
+            border-radius: 4px; color: #000; transition: transform 0.2s;
+        }
+        .palette-cell:hover { transform: scale(1.1); }
+        .palette-cell:first-child { color: #fff; }
+
+
+        /* 문제 상자 */
+        .problem-box { 
+            font-size: 1.1rem; line-height: 1.8; margin-bottom: 30px; padding: 30px; 
+            background: #fff; border-radius: 20px; text-align: left; 
+            border-left: 10px solid var(--c7); word-break: keep-all;
+            box-shadow: 5px 5px 20px rgba(0,0,0,0.02);
+        }
+
+        .iframe-wrapper {
+            width: 100%; border-radius: 16px; margin-bottom: 30px; background: #fff;
+            border: 1px solid #eee; overflow: hidden; height: 800px;
+        }
+        iframe { width: 100%; height: 100%; border: none; }
+
+        /* 힌트 스타일 */
+        details.hint-container summary {
+            list-style: none; background: #f0f0f0; padding: 14px 25px;
+            border-radius: 12px; font-weight: 700; cursor: pointer;
+            color: #444; transition: 0.3s;
+        }
+        details.hint-container[open] summary { background: var(--c9); color: #fff; margin-bottom: 15px; }
+
+        /* 애니메이션 정의 */
+        @keyframes blink { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.8); } }
+        @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.05); } }
+
+        @media (max-width: 600px) {
+            .container { padding: 20px; border-radius: 24px; }
+            .title-area h1 { font-size: 1.6rem; }
+            .palette-cell { width: 24px; height: 24px; font-size: 10px; }
+        }
+    </style>
+
+
+
+    <div class="background-lights">
+        <div class="light" style="background: var(--c14);"></div><div class="light" style="background: var(--c3);"></div>
+        <div class="light" style="background: var(--c22);"></div><div class="light" style="background: var(--c7);"></div>
+        <div class="light" style="background: var(--c1);"></div><div class="light" style="background: var(--c19);"></div>
+        <div class="light" style="background: var(--c11);"></div><div class="light" style="background: var(--c25);"></div>
+        <div class="light" style="background: var(--c6);"></div><div class="light" style="background: var(--c17);"></div>
+        <div class="light" style="background: var(--c9);"></div><div class="light" style="background: var(--c2);"></div>
+        <div class="light" style="background: var(--c13);"></div><div class="light" style="background: var(--c26);"></div>
+        <div class="light" style="background: var(--c5);"></div><div class="light" style="background: var(--c20);"></div>
+        <div class="light" style="background: var(--c8);"></div><div class="light" style="background: var(--c15);"></div>
+        <div class="light" style="background: var(--c24);"></div><div class="light" style="background: var(--c4);"></div>
+        <div class="light" style="background: var(--c12);"></div><div class="light" style="background: var(--c21);"></div>
+        <div class="light" style="background: var(--c10);"></div><div class="light" style="background: var(--c23);"></div>
+        <div class="light" style="background: var(--c18);"></div><div class="light" style="background: var(--c16);"></div>
+    </div>
+
+    <div class="container">
+        <div class="top-section" style="display: flex; align-items: flex-start; gap: 20px; margin-bottom: 30px;">
+            <div class="palette">
+                <div class="palette-cell" style="background: var(--c1);">E</div>
+                <div class="palette-cell" style="background: var(--c2);">S</div>
+                <div class="palette-cell" style="background: var(--c3);">I</div>
+                <div class="palette-cell" style="background: var(--c4);">A</div>
+                <div class="palette-cell" style="background: var(--c5);">R</div>
+                <div class="palette-cell" style="background: var(--c6);">N</div>
+                <div class="palette-cell" style="background: var(--c7);">T</div>
+                <div class="palette-cell" style="background: var(--c8);">O</div>
+                <div class="palette-cell" style="background: var(--c9);">L</div>
+                <div class="palette-cell" style="background: var(--c10);">C</div>
+                <div class="palette-cell" style="background: var(--c11);">D</div>
+                <div class="palette-cell" style="background: var(--c12);">U</div>
+                <div class="palette-cell" style="background: var(--c13);">G</div>
+                <div class="palette-cell" style="background: var(--c14);">P</div>
+                <div class="palette-cell" style="background: var(--c15);">M</div>
+                <div class="palette-cell" style="background: var(--c16);">H</div>
+                <div class="palette-cell" style="background: var(--c17);">B</div>
+                <div class="palette-cell" style="background: var(--c18);">Y</div>
+                <div class="palette-cell" style="background: var(--c19);">F</div>
+                <div class="palette-cell" style="background: var(--c20);">V</div>
+                <div class="palette-cell" style="background: var(--c21);">K</div>
+                <div class="palette-cell" style="background: var(--c22);">W</div>
+                <div class="palette-cell" style="background: var(--c23);">Z</div>
+                <div class="palette-cell" style="background: var(--c24);">X</div>
+                <div class="palette-cell" style="background: var(--c25);">J</div>
+                <div class="palette-cell" style="background: var(--c26);">Q</div>
+            </div>
+
+          <div class="title-area">
+            <h1>VOYAGE 26<br>TOWNSHIP</h1>
+            <div class="now-playing-text">NOW PLAYING: <br>HAPPY TOWN</div>
+        </div>
+    </div>
+
+<!-- ONLY-VIEW-START EX=[75210]--><div class="problem-box">신의 가호 아래, 마을의 모든 집은 저마다의 색으로 찬란히 빛났다.</div><!-- ONLY-VIEW-END -->
+<!-- ONLY-VIEW-START IN=[75210]--><div class="problem-box">신의 <strong>가호</strong> 아래, 마을의 모든 집은 저마다의 색으로 찬란히 빛났다.</div><!-- ONLY-VIEW-END -->
+
+    <div class="iframe-wrapper">
+        <iframe src="https://amplnet.github.io/color/quickbrown.html"></iframe>
+    </div>
+
+    <details class="hint-container">
+        <summary>HINTS</summary>
+        <div class="hint-content">그림의 여우를 클릭해주세요.</div>
+    </details>
+
+</div>

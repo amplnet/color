@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <style>
+        :root {
+            /* 사용자 지정 7가지 색상 */
+            --c1: #000000; --c2: #f8f9fa; --c3: #ff4d4d; --c4: #ffeb3b;
+            --c5: #4caf50; --c6: #ff9800; --c7: #2196f3;
+            
+            --bg-dark: #222222;
+            --card-bg: #313131;
+            --border-ui: #2a2a2a;
+            --text-dim: #666666;
+            
+            /* c1~c7 통합 그라데이션 */
+            --target-gradient: linear-gradient(135deg, 
+                var(--c1), var(--c2), var(--c3), var(--c4), var(--c5), var(--c6), var(--c7));
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg-dark);
+            color: #ffffff;
+            font-family: 'Pretendard', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 850px;
+            padding: 50px 40px;
+            border-radius: 24px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+            border: 1px solid var(--border-ui);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 1rem;
+            letter-spacing: 5px;
+            margin-bottom: 40px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+
+        /* 공통 사각형 */
+        .box {
+            width: 48px;
+            height: 48px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        /* 상단 타겟 존 (75214) - 그라데이션 적용 */
+        .target-zone {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 20px 30px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 16px;
+            margin-bottom: 60px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        /* 정답 사각형 5개 전용 스타일 */
+        .target-box {
+            background: var(--target-gradient);
+            background-size: 200% 200%;
+            animation: gradientMove 5s ease infinite;
+            border: none !important;
+            box-shadow: 0 0 15px rgba(255,255,255,0.1);
+        }
+
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* 암호문 구역 */
+        .cipher-area {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 25px;
+            margin-bottom: 60px;
+        }
+        .word { display: flex; gap: 8px; }
+
+        /* 하단 컨트롤 패널 */
+        .control-panel {
+            background: rgba(140,140,140,0.7);
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid var(--border-ui);
+        }
+
+        .mapping-slots {
+            display: flex;
+            justify-content: center;
+            gap: 14px;
+            margin-bottom: 35px;
+        }
+        .slot-item {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .slot-box {
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        .slot-box:hover { transform: scale(1.1); }
+        .slot-box.active { border-color: #fff; }
+        .label { font-size: 0.8rem; color: #ddd; font-weight: bold; letter-spacing: 1px; }
+
+        /* 알파벳 선택 뱅크 */
+        .letter-bank {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+        }
+        .letter-btn {
+            width: 54px;
+            height: 54px;
+            background: #222;
+            border: 1px solid #333;
+            color: #fff;
+            font-size: 1.4rem;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: 0.2s;
+        }
+        .letter-btn:hover { background: #333; transform: translateY(-2px); }
+        .letter-btn.selected {
+            background: #fff;
+            color: #000;
+            box-shadow: 0 10px 20px rgba(255,255,255,0.2);
+        }
+        .letter-btn.used { opacity: 0.1; pointer-events: none; }
+
+        /* 배경 색상 클래스 */
+        .bg-1 { background-color: var(--c1); color: #fff; }
+        .bg-2 { background-color: var(--c2); color: #000; }
+        .bg-3 { background-color: var(--c3); color: #fff; }
+        .bg-4 { background-color: var(--c4); color: #000; }
+        .bg-5 { background-color: var(--c5); color: #fff; }
+        .bg-6 { background-color: var(--c6); color: #fff; }
+        .bg-7 { background-color: var(--c7); color: #fff; }
+
+        .reset-link {
+            display: inline-block;
+            margin-top: 25px;
+            color: #fff;
+            font-size: 1rem;
+            text-decoration: none;
+            cursor: pointer;
+            letter-spacing: 2px;
+        }
+        .reset-link:hover { color: var(--c3); }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>일곱빛깔 글자들</h1>
+
+        <div class="target-zone">
+            <span style="color: #fff; font-size: 1rem; margin-right: 15px; font-weight: 900; letter-spacing: 2px;">정답</span>
+            <div class="box target-box"></div>
+            <div class="box target-box"></div>
+            <div class="box target-box"></div>
+            <div class="box target-box"></div>
+            <div class="box target-box"></div>
+        </div>
+
+        <div class="cipher-area" id="cipherOutput"></div>
+
+        <div class="control-panel">
+            <div class="mapping-slots">
+                <script>
+                    for(let i=1; i<=7; i++) {
+                        document.write(`
+                            <div class="slot-item">
+                                <div class="box bg-${i} slot-box" data-id="${i}" id="slot-${i}"></div>
+                                <span class="label">글자-${i}</span>
+                            </div>
+                        `);
+                    }
+                </script>
+            </div>
+
+            <div class="letter-bank" id="letterBank"></div>
+            <span class="reset-link" onclick="resetAll()">초기화</span>
+        </div>
+    </div>
+
+    <script>
+        const letters = "ESIARNO".split("");
+        const codeText = "12 3452 614 762754 32 32264 761";
+        let mapping = { 1:"", 2:"", 3:"", 4:"", 5:"", 6:"", 7:"" };
+        let currentLetter = null;
+
+        function renderCipher() {
+            const out = document.getElementById('cipherOutput');
+            out.innerHTML = "";
+            codeText.split(" ").forEach(word => {
+                const wordDiv = document.createElement('div');
+                wordDiv.className = 'word';
+                word.split("").forEach(num => {
+                    const box = document.createElement('div');
+                    box.className = `box bg-${num}`;
+                    box.innerText = mapping[num] || "";
+                    wordDiv.appendChild(box);
+                });
+                out.appendChild(wordDiv);
+            });
+        }
+
+        function renderBank() {
+            const bank = document.getElementById('letterBank');
+            bank.innerHTML = "";
+            letters.forEach(char => {
+                const btn = document.createElement('button');
+                btn.className = 'letter-btn';
+                if (Object.values(mapping).includes(char)) btn.className += ' used';
+                if (currentLetter === char) btn.className += ' selected';
+                btn.innerText = char;
+                btn.onclick = () => {
+                    currentLetter = char;
+                    renderBank();
+                };
+                bank.appendChild(btn);
+            });
+        }
+
+        document.querySelectorAll('.slot-box').forEach(slot => {
+            slot.onclick = function() {
+                const id = this.getAttribute('data-id');
+                if (currentLetter) {
+                    for (let key in mapping) { if (mapping[key] === currentLetter) mapping[key] = ""; }
+                    mapping[id] = currentLetter;
+                    this.innerText = currentLetter;
+                    currentLetter = null;
+                    renderCipher();
+                    renderBank();
+                } else {
+                    mapping[id] = "";
+                    this.innerText = "";
+                    renderCipher();
+                    renderBank();
+                }
+            };
+        });
+
+        function resetAll() {
+            mapping = { 1:"", 2:"", 3:"", 4:"", 5:"", 6:"", 7:"" };
+            document.querySelectorAll('.slot-box').forEach(s => s.innerText = "");
+            currentLetter = null;
+            renderCipher();
+            renderBank();
+        }
+
+        renderCipher();
+        renderBank();
+    </script>
+</body>
+</html>

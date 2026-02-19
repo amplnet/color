@@ -22,10 +22,11 @@
             display: flex; flex-direction: column;
         }
 
-        /* 메인 컨테이너: 좌우 2분할 */
+        /* 메인 컨테이너: 항상 좌우 2분할 유지 */
         main {
             flex: 1;
             display: flex;
+            flex-direction: row; /* 명시적으로 가로 배치 설정 */
             height: 100%;
             overflow: hidden;
         }
@@ -35,7 +36,7 @@
             flex: 1; /* 50:50 비율 */
             display: flex;
             flex-direction: column;
-            border-right: 4px solid rgba(0,0,0,0.2);
+            border-right: 2px solid rgba(0,0,0,0.2);
         }
 
         /* 왼쪽: 세상 (5글자) */
@@ -43,31 +44,29 @@
         /* 오른쪽: 마을 (4글자) */
         .village-col { background-color: var(--village-bg); border-right: none; }
 
-        /* 헤더 스타일 (수정됨) */
+        /* 헤더 스타일 */
         h2 {
             text-align: center;
             padding: 20px 0 15px; margin: 0;
-            font-size: 1.4rem; letter-spacing: 3px;
+            font-size: 1.4rem; letter-spacing: 2px;
             text-transform: uppercase;
             background: rgba(0,0,0,0.1);
             font-weight: 900;
-            position: relative; /* 구분선 위치 기준 */
+            position: relative;
         }
 
-        /* 헤더 하단 구분선 추가 */
+        /* 헤더 하단 구분선 */
         h2::after {
             content: '';
             display: block;
-            width: 60px; /* 선 길이 */
-            height: 5px; /* 선 두께 */
-            margin: 15px auto 0; /* 중앙 정렬 및 여백 */
+            width: 40px;
+            height: 4px;
+            margin: 10px auto 0;
             border-radius: 2px;
         }
 
-        /* 각 컬럼별 구분선 색상 지정 */
         .world-col h2::after { background-color: var(--world-accent); box-shadow: 0 0 10px var(--world-accent); }
         .village-col h2::after { background-color: var(--village-accent); box-shadow: 0 0 10px var(--village-accent); }
-
 
         /* 이미지 스택 컨테이너 */
         .image-stack {
@@ -78,54 +77,38 @@
 
         /* 개별 이미지 박스 */
         .img-box {
-            flex: 1; /* 5등분 */
+            flex: 1;
             background-size: cover;
             background-position: center;
-            filter: grayscale(40%) brightness(0.7) contrast(1.1); /* 분위기 통일을 위한 필터 */
+            filter: grayscale(40%) brightness(0.7) contrast(1.1);
             transition: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            border-bottom: 1px solid rgba(255,255,255,0.15);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
             position: relative;
         }
 
-        /* 이미지 위에 텍스트 오버레이 (옵션: 필요시 주석 해제) */
-        /*
-        .img-box::before {
-            content: attr(data-word);
-            position: absolute;
-            bottom: 10px; left: 20px;
-            font-size: 1.2rem; font-weight: bold;
-            opacity: 0.5; transition: 0.3s;
-        }
-        */
-
-        /* 마우스 오버 시 강조 효과 */
+        /* 호버 효과 */
         .row-hover .img-box, .img-box:hover {
             filter: grayscale(0%) brightness(1.1) contrast(1);
             z-index: 10;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            transform: scale(1.02); /* 살짝 커지는 효과 */
+            transform: scale(1.02);
             border-bottom-color: transparent;
         }
-        /* .row-hover .img-box::before, .img-box:hover::before { opacity: 1; } */
-
 
         /* 푸터 스타일 */
         footer {
             text-align: center;
-            padding: 25px;
+            padding: 15px;
             background: #111;
-            font-weight: 700; letter-spacing: 1.5px;
-            font-size: 0.9rem; color: #888;
-            border-top: 3px solid #222;
+            font-weight: 700; letter-spacing: 1px;
+            font-size: 0.75rem; color: #888;
+            border-top: 2px solid #222;
         }
 
-        /* 반응형: 모바일 */
+        /* 반응형: 모바일 (2열 유지하며 크기만 최적화) */
         @media (max-width: 768px) {
-            main { flex-direction: column; height: auto; }
-            .column { height: auto; border-right: none; }
-            .image-stack { height: 80vh; } /* 모바일에서 이미지 영역 높이 설정 */
-            h2 { font-size: 1.2rem; padding: 15px 0; }
-            h2::after { width: 40px; height: 4px; margin-top: 10px; }
+            h2 { font-size: 1rem; padding: 12px 0; letter-spacing: 1px; }
+            h2::after { width: 30px; height: 3px; }
+            footer { font-size: 0.65rem; padding: 10px; }
         }
     </style>
 </head>
@@ -135,22 +118,22 @@
     <section class="column world-col">
         <h2>?orld</h2>
         <div class="image-stack">
-            <div class="img-box row-1" data-word="" style="background-image: url('https://amplnet.github.io/color/13/11-1.png');"></div>
-            <div class="img-box row-2" data-word="" style="background-image: url('https://amplnet.github.io/color/13/11-2.png');"></div>
-                        <div class="img-box row-3" data-word="" style="background-image: url('https://amplnet.github.io/color/13/11-3.png');"></div>
-                                    <div class="img-box row-4" data-word="" style="background-image: url('https://amplnet.github.io/color/13/11-4.png');"></div>
-                                                <div class="img-box row-5" data-word="" style="background-image: url('https://amplnet.github.io/color/13/11-5.png');"></div>
+            <div class="img-box row-1" style="background-image: url('https://amplnet.github.io/color/13/11-1.png');"></div>
+            <div class="img-box row-2" style="background-image: url('https://amplnet.github.io/color/13/11-2.png');"></div>
+            <div class="img-box row-3" style="background-image: url('https://amplnet.github.io/color/13/11-3.png');"></div>
+            <div class="img-box row-4" style="background-image: url('https://amplnet.github.io/color/13/11-4.png');"></div>
+            <div class="img-box row-5" style="background-image: url('https://amplnet.github.io/color/13/11-5.png');"></div>
         </div>
     </section>
 
     <section class="column village-col">
         <h2>to?n</h2>
         <div class="image-stack">
-                                                <div class="img-box row-1" data-word="" style="background-image: url('https://amplnet.github.io/color/13/2-1.png');"></div>
-                                                <div class="img-box row-2" data-word="" style="background-image: url('https://amplnet.github.io/color/13/2-2.png');"></div>
-                                                                                                <div class="img-box row-3" data-word="" style="background-image: url('https://amplnet.github.io/color/13/2-3.png');"></div>
-                                                                                                                                                <div class="img-box row-4" data-word="" style="background-image: url('https://amplnet.github.io/color/13/2-4.png');"></div>
-                                                                                                                                                                                                <div class="img-box row-5" data-word="" style="background-image: url('https://amplnet.github.io/color/13/2-5.png');"></div>
+            <div class="img-box row-1" style="background-image: url('https://amplnet.github.io/color/13/2-1.png');"></div>
+            <div class="img-box row-2" style="background-image: url('https://amplnet.github.io/color/13/2-2.png');"></div>
+            <div class="img-box row-3" style="background-image: url('https://amplnet.github.io/color/13/2-3.png');"></div>
+            <div class="img-box row-4" style="background-image: url('https://amplnet.github.io/color/13/2-4.png');"></div>
+            <div class="img-box row-5" style="background-image: url('https://amplnet.github.io/color/13/2-5.png');"></div>
         </div>
     </section>
 </main>
@@ -164,13 +147,24 @@
     for (let i = 1; i <= rows; i++) {
         const leftImg = document.querySelector(`.world-col .row-${i}`);
         const rightImg = document.querySelector(`.village-col .row-${i}`);
-        const addHover = () => { leftImg.classList.add('row-hover'); rightImg.classList.add('row-hover'); };
-        const removeHover = () => { leftImg.classList.remove('row-hover'); rightImg.classList.remove('row-hover'); };
+        
+        const addHover = () => { 
+            if(leftImg) leftImg.classList.add('row-hover'); 
+            if(rightImg) rightImg.classList.add('row-hover'); 
+        };
+        const removeHover = () => { 
+            if(leftImg) leftImg.classList.remove('row-hover'); 
+            if(rightImg) rightImg.classList.remove('row-hover'); 
+        };
 
-        leftImg.addEventListener('mouseenter', addHover);
-        leftImg.addEventListener('mouseleave', removeHover);
-        rightImg.addEventListener('mouseenter', addHover);
-        rightImg.addEventListener('mouseleave', removeHover);
+        [leftImg, rightImg].forEach(el => {
+            if(el) {
+                el.addEventListener('mouseenter', addHover);
+                el.addEventListener('mouseleave', removeHover);
+                el.addEventListener('touchstart', addHover); // 모바일 터치 대응
+                el.addEventListener('touchend', removeHover);
+            }
+        });
     }
 </script>
 

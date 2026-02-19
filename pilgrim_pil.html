@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Foundation - Classified Recovery Unit</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&family=Noto+Sans+KR:wght@300;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --f-dark: #050505;
+            --shard-r: #ff4d4d; --shard-g: #4caf50; --shard-b: #2196f3;
+            --vivid-gradient: linear-gradient(45deg, #ff4d4d, #ff9800, #ffeb3b, #4caf50, #2196f3, #3f51b5, #9c27b0, #ff4d4d);
+        }
+
+        /* 기본 보안: 드래그 및 텍스트 선택 방지 */
+        * { 
+            margin: 0; padding: 0; box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent;
+            user-select: none; -webkit-user-select: none;
+        }
+        
+        body {
+            background-color: var(--f-dark); color: #eee;
+            font-family: 'Noto Sans KR', sans-serif; overflow: hidden;
+        }
+
+        /* ---------------- [CORE] 필터 및 배경 ---------------- */
+        .master-screen {
+            filter: url(#rgbMasterFilter);
+            transition: filter 0.8s ease;
+            min-height: 100vh; display: flex; justify-content: center; align-items: center;
+            padding-bottom: 220px; position: relative; z-index: 1;
+        }
+
+        .vivid-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--vivid-gradient); background-size: 400% 400%;
+            animation: gradientFlow 15s ease infinite; opacity: 0; transition: opacity 2s ease;
+            z-index: -1;
+        }
+        @keyframes gradientFlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+        /* ---------------- 콘텐츠 카드 ---------------- */
+        .content-card {
+            width: 95%; max-width: 750px; background: rgba(255, 255, 255, 0.95);
+            padding: 35px; border-radius: 40px; text-align: center;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8); color: #222;
+        }
+
+        .recovery-header { font-family: 'Share Tech Mono'; font-size: 0.8rem; color: #888; margin-bottom: 20px; text-align: left; }
+
+        .sentence-area {
+            font-family: 'Montserrat', sans-serif; font-size: 1.1rem; margin-bottom: 30px;
+            display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; font-weight: 800;
+        }
+        .word { transition: 0.8s; opacity: 0; transform: translateY(10px); color: #000; }
+        .word.revealed { opacity: 1; transform: translateY(0); }
+
+        /* ---------------- 제단 애니메이션 ---------------- */
+        .ritual-scene { position: relative; width: 100%; height: 350px; background: #000; border-radius: 25px; overflow: hidden; }
+        .altar {
+            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+            width: 140px; height: 50px; background: #111; clip-path: polygon(15% 0, 85% 0, 100% 100%, 0 100%); z-index: 5;
+        }
+        .seeker {
+            position: absolute; bottom: 40px; left: 5%; width: 50px; height: 110px; background: #000; z-index: 10;
+            clip-path: polygon(45% 0, 55% 0, 80% 25%, 60% 50%, 90% 100%, 10% 100%, 40% 50%, 20% 25%);
+            transition: all 1s ease-in-out;
+        }
+        .seeker.moving { left: 32%; }
+        .seeker.acting { transform: scale(1.1) translateY(-15px); }
+
+        .altar-fragment {
+            position: absolute; bottom: 100px; left: 50%; width: 22px; height: 38px;
+            opacity: 0; transform: translateY(30px); transition: 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+        }
+        .altar-fragment.active { opacity: 1; transform: translateY(0); animation: float 3s infinite ease-in-out; }
+        .altar-fragment.r { margin-left: -40px; background: var(--shard-r); box-shadow: 0 0 20px var(--shard-r); }
+        .altar-fragment.g { margin-bottom: 15px; background: var(--shard-g); box-shadow: 0 0 20px var(--shard-g); }
+        .altar-fragment.b { margin-left: 40px; background: var(--shard-b); box-shadow: 0 0 20px var(--shard-b); }
+
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+
+        /* ---------------- UI 패널 ---------------- */
+        .shard-panel {
+            position: fixed; bottom: 0; left: 0; width: 100%; background: #0a0a0a;
+            padding: 25px 20px 45px; z-index: 1000; border-top: 2px solid #222;
+            display: flex; flex-direction: column; align-items: center; gap: 15px;
+        }
+        .shard-slots { display: flex; gap: 15px; }
+        .shard-slot {
+            width: 75px; height: 75px; background: #000; border: 2px dashed #333;
+            border-radius: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: 0.3s;
+        }
+        .shard-slot.processing { cursor: wait; opacity: 0.5; }
+        .shard-icon { width: 45%; height: 45%; clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); background: #1a1a1a; transition: 0.4s; }
+        .shard-slot.active[data-color="r"] .shard-icon { background: var(--shard-r); box-shadow: 0 0 15px var(--shard-r); }
+        .shard-slot.active[data-color="g"] .shard-icon { background: var(--shard-g); box-shadow: 0 0 15px var(--shard-g); }
+        .shard-slot.active[data-color="b"] .shard-icon { background: var(--shard-b); box-shadow: 0 0 15px var(--shard-b); }
+
+        .status-msg { font-family: 'Share Tech Mono'; font-size: 0.8rem; color: #444; }
+        .copy-btn { 
+            margin-top: 20px; display: none; background: #000; color: #fff; border: none; 
+            padding: 12px 30px; border-radius: 10px; cursor: pointer; font-family: 'Montserrat'; font-weight: 800; 
+        }
+
+        /* ---------------- 가짜 소스 가리기 ---------------- */
+        #protection-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; color: red; padding: 50px; font-family: monospace; }
+    </style>
+</head>
+<body oncontextmenu="return false" onselectstart="return false" ondragstart="return false">
+
+    <div id="protection-overlay">거절</div>
+
+    <svg style="position: absolute; width: 0; height: 0;">
+        <filter id="rgbMasterFilter">
+            <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0" id="matrixNode"/>
+        </filter>
+    </svg>
+
+    <div class="master-screen">
+        <div class="vivid-bg" id="vividBg"></div>
+        <div class="content-card">
+            <div class="recovery-header">PILGRAMAGE</div>
+            <div class="sentence-area">
+                <span class="word">사람들은 재단에 기억의 조각을 올려놓았다.</br></span>
+                <span class="word"></br>조각은 천천히 빛나며 하나씩 색채를 반환하였다.</span>
+                <span class="word"></br>마지막 조각을 올리자, 세계는 다시 저마다의 색으로 찬란히 빛났다.</span>
+            </div>
+            <div class="ritual-scene">
+                <div class="altar-fragment r" id="alt-r"></div>
+                <div class="altar-fragment g" id="alt-g"></div>
+                <div class="altar-fragment b" id="alt-b"></div>
+                <div class="altar"></div>
+                <div class="seeker" id="seeker"></div>
+            </div>
+            <button class="copy-btn" id="copyBtn" onclick="extractData()">색채 되돌리기</button>
+        </div>
+    </div>
+
+    <div class="shard-panel">
+        <div class="status-msg" id="statusText">기억의 조각.</div>
+        <div class="shard-slots">
+            <div class="shard-slot" data-color="r"><div class="shard-icon"></div></div>
+            <div class="shard-slot" data-color="g"><div class="shard-icon"></div></div>
+            <div class="shard-slot" data-color="b"><div class="shard-icon"></div></div>
+        </div>
+    </div>
+
+    <script>
+        const state = { r: 0, g: 0, b: 0 };
+        const matrix = document.getElementById('matrixNode');
+        const seeker = document.getElementById('seeker');
+        const vividBg = document.getElementById('vividBg');
+        const statusText = document.getElementById('statusText');
+        const words = document.querySelectorAll('.word');
+        const copyBtn = document.getElementById('copyBtn');
+        let isProcessing = false;
+
+        const secureData = "cmV0dXJudG91bml2ZXJzZQ=="; 
+
+        async function shardRitual(color, slot) {
+            if (isProcessing) return;
+            isProcessing = true;
+            slot.classList.add('processing');
+
+            seeker.classList.add('moving');
+            statusText.innerText = `기억의 조각: ${color.toUpperCase()}...`;
+
+            await new Promise(r => setTimeout(r, 800));
+            seeker.classList.add('acting');
+
+            state[color] = state[color] === 0 ? 1 : 0;
+            slot.classList.toggle('active');
+            
+            await new Promise(r => setTimeout(r, 400));
+            
+            applyRecovery();
+            
+            seeker.classList.remove('acting');
+            if (Object.values(state).every(v => v === 0)) seeker.classList.remove('moving');
+            
+            slot.classList.remove('processing');
+            isProcessing = false;
+        }
+
+        function applyRecovery() {
+            const activeCount = state.r + state.g + state.b;
+            let mult = 0;
+            words.forEach(w => w.classList.remove('revealed'));
+            vividBg.style.opacity = "0";
+            copyBtn.style.display = 'none';
+
+            if (activeCount === 1) {
+                mult = 0.03;
+                statusText.innerText = "기억의 조각을 올려놓았다.";
+                words[0].classList.add('revealed');
+            } else if (activeCount === 2) {
+                mult = 0.35;
+                statusText.innerText = "기억의 조각을 하나 더 올려놓았다.";
+                words[0].classList.add('revealed');
+                words[1].classList.add('revealed');
+            } else if (activeCount === 3) {
+                mult = 1.0;
+                statusText.innerText = "기억의 조각을 모두 올려놓았다.";
+                words.forEach(w => w.classList.add('revealed'));
+                copyBtn.style.display = 'block';
+                vividBg.style.opacity = "1";
+            } else {
+                statusText.innerText = "기억의 조각을 올려주세요.";
+            }
+
+            document.getElementById('alt-r').classList.toggle('active', state.r);
+            document.getElementById('alt-g').classList.toggle('active', state.g);
+            document.getElementById('alt-b').classList.toggle('active', state.b);
+
+            matrix.setAttribute('values', `${state.r*mult} 0 0 0 0 0 ${state.g*mult} 0 0 0 0 0 ${state.b*mult} 0 0 0 0 0 1 0`);
+        }
+
+        document.querySelectorAll('.shard-slot').forEach(slot => {
+            slot.addEventListener('click', () => shardRitual(slot.dataset.color, slot));
+        });
+
+        function extractData() {
+          
+            const decoded = atob(secureData);
+            navigator.clipboard.writeText(decoded).then(() => {
+                alert("기억 복구 완료: " + decoded);
+            });
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.keyCode === 123 || 
+               (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) || 
+               (e.ctrlKey && e.keyCode === 85) || 
+               (e.ctrlKey && e.keyCode === 83)) {
+                e.preventDefault();
+                document.getElementById('protection-overlay').style.display = 'block';
+                return false;
+            }
+        });
+
+        (function() {
+            const block = function() {
+                setInterval(function() { debugger; }, 50);
+            };
+            try { block(); } catch (err) {}
+        })();
+    </script>
+</body>
+</html>
